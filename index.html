@@ -39,11 +39,12 @@
         <header class="bg-indigo-600 text-white p-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
             <div>
                 <h1 class="text-xl font-bold tracking-wider">文化祭スタンプラリー</h1>
-                <p class="text-[10px] text-indigo-200">QRコードをかざしてスタンプGET！</p>
+                <p class="text-[10px] text-indigo-200">10箇所中 5箇所クリアで特典GET！</p>
             </div>
             <div class="flex items-center bg-indigo-700 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner">
                 <i data-lucide="trophy" class="w-4 h-4 text-yellow-400 mr-1"></i>
-                <span id="header-stamp-count" class="font-bold text-sm">0 / 5</span>
+                <!-- 表示を 0 / 10 に変更 -->
+                <span id="header-stamp-count" class="font-bold text-sm">0 / 10</span>
             </div>
         </header>
 
@@ -106,13 +107,15 @@
                 <div class="flex flex-col items-center mb-6">
                     <h2 class="text-2xl font-bold text-indigo-900 mb-1">スタンプコレクション</h2>
                     <div class="w-16 h-1 bg-indigo-300 rounded-full mb-2"></div>
-                    <p class="text-sm text-slate-500">全5箇所のスポットを巡ろう！</p>
+                    <!-- 説明テキストを「10箇所中5箇所」に修正 -->
+                    <p class="text-sm text-slate-500">10箇所中、任意の5箇所を巡って特典GET！</p>
                 </div>
                 <div id="stamp-list-container" class="flex flex-col space-y-4"></div>
             </section>
 
             <!-- 3. 特典画面 -->
             <section id="tab-ticket" class="tab-content p-6 h-full bg-slate-900 items-center justify-center text-center pb-24">
+                <!-- 特典アンロック後 -->
                 <div id="ticket-unlocked" class="hidden w-full max-w-sm animate-fade-in-up">
                     <div class="relative bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 p-1.5 rounded-[2rem] shadow-[0_0_40px_rgba(251,191,36,0.4)]">
                         <div class="bg-white rounded-[1.7rem] p-8 relative overflow-hidden">
@@ -120,7 +123,7 @@
                             <div class="relative">
                                 <i data-lucide="gift" class="w-16 h-16 mx-auto text-amber-500 mb-3 animate-bounce"></i>
                             </div>
-                            <p class="text-xs font-bold text-amber-600 tracking-widest mb-1">ALL CLEARED</p>
+                            <p class="text-xs font-bold text-amber-600 tracking-widest mb-1">5 SPOTS CLEARED</p>
                             <h2 class="text-3xl font-black text-indigo-900 mb-6 border-b border-slate-200 pb-4">コンプリート特典</h2>
                             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-inner">
                                 <p class="font-bold text-indigo-800 text-xl mb-1">模擬店 100円割引券</p>
@@ -130,12 +133,14 @@
                     </div>
                 </div>
                 
+                <!-- 特典ロック中 -->
                 <div id="ticket-locked" class="text-white flex flex-col items-center">
                     <div class="w-24 h-24 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-6 shadow-inner">
                         <i data-lucide="trophy" class="w-10 h-10 text-slate-500"></i>
                     </div>
                     <h2 class="text-2xl font-bold mb-3 tracking-wide">まだ特典はありません</h2>
-                    <p class="text-slate-400 mb-10 text-sm leading-relaxed">5つのスポットをすべて回って<br/>スタンプを集めよう！</p>
+                    <!-- 説明テキストを「5つのスタンプ」に変更 -->
+                    <p class="text-slate-400 mb-10 text-sm leading-relaxed">10箇所中、お好きなスポットの<br>スタンプを5つ集めよう！</p>
                     <button onclick="switchTab('scan')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-full font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
                         QRスキャンに戻る
                     </button>
@@ -172,6 +177,7 @@
             </button>
             <button onclick="switchTab('stamps')" id="nav-stamps" class="nav-btn flex flex-col items-center w-1/3 py-2 text-slate-400 transition-colors relative">
                 <div class="p-1 rounded-xl mb-1 transition-colors" id="nav-icon-bg-stamps"><i data-lucide="map" class="w-6 h-6"></i></div>
+                <!-- バッジも現在のスタンプ数をそのまま表示 -->
                 <span id="nav-stamp-badge" class="hidden absolute top-1 right-[28%] bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm ring-2 ring-white">0</span>
                 <span class="text-[10px] font-bold">スタンプ帳</span>
             </button>
@@ -191,16 +197,24 @@
 
     <script>
         // ==========================================
-        // ★★★ ここに先ほど控えたGASのURLを貼り付けます ★★★
+        // ★★★ ここに控えたGASのURLを貼り付けてください ★★★
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbz7vCwQiGT3zPXSVgA6Mvg9skd_Exie9FpwUw0F0xezcgcME-_OFrX3nx57naGZsWk/exec"; 
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
 
+        // ==========================================
+        // スポットデータを10箇所に拡張！
+        // ==========================================
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
             { id: 2, name: "Ichijospot 2", emoji: "🎭", desc: "体育館・ステージ発表。ダンス部の公演が行われます。" },
             { id: 3, name: "Ichijospot 3", emoji: "🎨", desc: "文化部展示エリア。写真部や美術部の作品が並びます。" },
             { id: 4, name: "Ichijospot 4", emoji: "🍔", desc: "中庭・飲食スペース。焼きそばやフランクフルトを販売中。" },
-            { id: 5, name: "Ichijospot 5", emoji: "👻", desc: "お化け屋敷・アトラクション。悲鳴が絶えない人気スポット。" }
+            { id: 5, name: "Ichijospot 5", emoji: "👻", desc: "お化け屋敷・アトラクション。悲鳴が絶えない人気スポット。" },
+            { id: 6, name: "Ichijospot 6", emoji: "☕", desc: "2年生の喫茶店。レトロな雰囲気で美味しい飲み物をどうぞ。" },
+            { id: 7, name: "Ichijospot 7", emoji: "🎸", desc: "中庭特設ステージ。バンド演奏によるライブパフォーマンス！" },
+            { id: 8, name: "Ichijospot 8", emoji: "🧪", desc: "科学部展示。面白い実験や不思議な科学体験ができます。" },
+            { id: 9, name: "Ichijospot 9", emoji: "📚", desc: "図書室の古本市。お気に入りの一冊が見つかるかも。" },
+            { id: 10, name: "Ichijospot 10", emoji: "🎯", desc: "縁日コーナー。射的や輪投げで豪華景品を狙おう！" }
         ];
 
         let stamps = [];
@@ -225,7 +239,7 @@
         }
 
         // ==========================================
-        // カメラ起動の徹底改善（直接起動・フォールバック方式）
+        // カメラ起動（直接起動・フォールバック方式）
         // ==========================================
         function startScanner() {
             document.getElementById('start-ui').classList.add('hidden');
@@ -236,15 +250,13 @@
             
             html5QrCode = new Html5Qrcode("qr-reader");
             
-            // PC・スマホ問わず、まずは背面カメラを即座に指定して起動を試みる
             html5QrCode.start(
                 { facingMode: "environment" },
                 { fps: 10, qrbox: { width: 220, height: 220 } },
                 (decodedText) => processScanResult(decodedText),
-                (errorMessage) => {} // 毎フレームのエラーは無視
+                (errorMessage) => {} 
             ).catch((err) => {
                 console.warn("背面カメラ起動失敗。内カメラ等で再試行します:", err);
-                // 背面カメラがダメだった場合（PCなど）、とにかく使えるカメラで起動
                 html5QrCode.start(
                     { facingMode: "user" },
                     { fps: 10, qrbox: { width: 220, height: 220 } },
@@ -307,7 +319,8 @@
             if (isProcessing) return;
             const match = decodedText.match(/^ICHIJO_SPOT_(\d+)$/);
             if (match) {
-                const spot = SPOTS.find(s => s.id === parseInt(match[1]));
+                const spotId = parseInt(match[1]);
+                const spot = SPOTS.find(s => s.id === spotId);
                 if (spot) {
                     isProcessing = true;
                     stopScanner();
@@ -329,22 +342,30 @@
         }
 
         // ==========================================
-        // スタンプ記録 ＆ GitHubからGASへデータ送信
+        // スタンプ記録 ＆ データ送信
         // ==========================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) return; 
 
             const payload = { action: action, ...data };
 
-            fetch(GAS_API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" }, 
-                body: JSON.stringify(payload)
-            }).then(response => {
-                console.log("GASへの送信成功", response);
-            }).catch(error => {
-                console.error("GASへの送信エラー:", error);
-            });
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", GAS_API_URL, true);
+            xhr.setRequestHeader('Content-Type', 'text/plain'); 
+            
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    console.log("GASへの送信成功:", xhr.responseText);
+                } else {
+                    console.error("GASへの送信エラー(HTTP):", xhr.status, xhr.statusText);
+                }
+            };
+            
+            xhr.onerror = function() {
+                console.error("GASへの送信エラー(Network Error)");
+            };
+
+            xhr.send(JSON.stringify(payload));
         }
 
         function handleStampSuccess(spot) {
@@ -357,7 +378,7 @@
                 updateAllUI();
                 openResultModal(spot, 'success');
                 
-                // ★裏側でGASのAPIへデータを送信★
+                // GASへデータを送信
                 sendDataToGAS("saveStamp", {
                     userId: userId,
                     spotId: spot.id,
@@ -365,7 +386,7 @@
                     totalStamps: stamps.length
                 });
                 
-                // 全クリ時
+                // ★5/10クリア条件判定に変更！★
                 if (stamps.length >= 5) {
                     sendDataToGAS("saveComplete", {
                         userId: userId,
@@ -385,11 +406,15 @@
         // --- UI系の処理 ---
         function updateAllUI() {
             const count = stamps.length;
-            document.getElementById('header-stamp-count').textContent = `${count} / 5`;
+            // 表示を 10分のに変更
+            document.getElementById('header-stamp-count').textContent = `${count} / 10`;
             const badge = document.getElementById('nav-stamp-badge');
             if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
+            
+            // 5個集まったら通知ピンを表示する
             const ping = document.getElementById('nav-ticket-ping');
             if (count >= 5) ping.classList.remove('hidden');
+            
             renderStamps();
             updateTicketScreen();
         }
@@ -420,6 +445,7 @@
         }
 
         function updateTicketScreen() {
+            // 特典のアンロック条件も「5個以上」に変更
             if (stamps.length >= 5) {
                 document.getElementById('ticket-unlocked').classList.remove('hidden');
                 document.getElementById('ticket-locked').classList.add('hidden');
