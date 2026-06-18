@@ -178,20 +178,30 @@
             </div>
         </div>
 
-        <!-- 最初のお名前入力モーダル（フルネーム強制） -->
+        <!-- 最初のお名前入力モーダル（フルネーム強制＋空白指示の視覚的強調） -->
         <div id="name-input-modal" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-md z-[5000] flex items-center justify-center p-4">
             <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-100 animate-fade-in-up">
                 <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
                     <i data-lucide="user-check" class="w-8 h-8"></i>
                 </div>
                 <h3 class="text-xl font-bold text-indigo-900 mb-2">お名前を入力してください</h3>
-                <p class="text-xs text-slate-500 mb-6 leading-relaxed px-2">
-                    景品交換所での本人確認のために使用します。<br><strong>名字と名前（フルネーム）</strong>を正しく入力してください。
+                <!-- 説明文をご指定の「本人確認をする場合に使用します。」に変更しました -->
+                <p class="text-xs text-slate-500 mb-4 leading-relaxed px-2">
+                    本人確認をする場合に使用します。
                 </p>
+                
+                <!-- 赤字・太字で強く目立たせる警告表示 -->
+                <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 text-left">
+                    <p class="text-xs text-red-600 font-extrabold flex items-start leading-relaxed">
+                        <i data-lucide="alert-circle" class="w-5 h-5 mr-1.5 shrink-0 text-red-500"></i>
+                        <span>⚠️ 名字と名前の間に、必ず「スペース（半角または全角の空白）」を1つ空けて入力してください！</span>
+                    </p>
+                </div>
                 
                 <div class="space-y-4 mb-6">
                     <input type="text" id="fullname-input" placeholder="例：一条 太郎" class="w-full px-4 py-3.5 bg-slate-100 border-2 border-slate-200 rounded-xl text-center font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors">
-                    <p id="name-validation-error" class="hidden text-xs text-red-500 font-bold"><i data-lucide="alert-circle" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>名字と名前（フルネーム）を入力してください</p>
+                    <!-- エラーメッセージもスペースに言及 -->
+                    <p id="name-validation-error" class="hidden text-xs text-red-500 font-bold"><i data-lucide="alert-circle" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>名字と名前の間にスペース（空白）を空けて入力してください</p>
                 </div>
 
                 <button onclick="submitName()" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors flex items-center justify-center">
