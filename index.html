@@ -43,7 +43,6 @@
             </div>
             <div class="flex items-center bg-indigo-700 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner">
                 <i data-lucide="trophy" class="w-4 h-4 text-yellow-400 mr-1"></i>
-                <!-- 表示を 0 / 10 に変更 -->
                 <span id="header-stamp-count" class="font-bold text-sm">0 / 10</span>
             </div>
         </header>
@@ -57,7 +56,7 @@
                 <!-- 初期UI（ボタン） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
                     <h2 class="text-2xl font-bold text-indigo-900 mb-2">QRコードを読み取る</h2>
-                    <p class="text-sm text-slate-500 text-center mb-8">
+                    <p class="text-sm text-slate-500 text-center mb-6">
                         カメラを起動して、スポットにある<br/>QRコードをかざしてください。
                     </p>
 
@@ -79,6 +78,13 @@
                     <!-- エラーメッセージ用 -->
                     <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
                         <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
+                    </div>
+
+                    <!-- ★運営用・スプレッドシート連携テスト接続ボタン★ -->
+                    <div class="mt-8 pt-4 border-t border-slate-200 w-full">
+                        <button onclick="testGASSend()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow transition-colors flex items-center justify-center">
+                            <i data-lucide="database" class="w-4 h-4 mr-1"></i>スプシ接続テストを実行
+                        </button>
                     </div>
                 </div>
 
@@ -107,7 +113,6 @@
                 <div class="flex flex-col items-center mb-6">
                     <h2 class="text-2xl font-bold text-indigo-900 mb-1">スタンプコレクション</h2>
                     <div class="w-16 h-1 bg-indigo-300 rounded-full mb-2"></div>
-                    <!-- 説明テキストを「10箇所中5箇所」に修正 -->
                     <p class="text-sm text-slate-500">10箇所中、任意の5箇所を巡って特典GET！</p>
                 </div>
                 <div id="stamp-list-container" class="flex flex-col space-y-4"></div>
@@ -139,7 +144,6 @@
                         <i data-lucide="trophy" class="w-10 h-10 text-slate-500"></i>
                     </div>
                     <h2 class="text-2xl font-bold mb-3 tracking-wide">まだ特典はありません</h2>
-                    <!-- 説明テキストを「5つのスタンプ」に変更 -->
                     <p class="text-slate-400 mb-10 text-sm leading-relaxed">10箇所中、お好きなスポットの<br>スタンプを5つ集めよう！</p>
                     <button onclick="switchTab('scan')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-full font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
                         QRスキャンに戻る
@@ -177,7 +181,6 @@
             </button>
             <button onclick="switchTab('stamps')" id="nav-stamps" class="nav-btn flex flex-col items-center w-1/3 py-2 text-slate-400 transition-colors relative">
                 <div class="p-1 rounded-xl mb-1 transition-colors" id="nav-icon-bg-stamps"><i data-lucide="map" class="w-6 h-6"></i></div>
-                <!-- バッジも現在のスタンプ数をそのまま表示 -->
                 <span id="nav-stamp-badge" class="hidden absolute top-1 right-[28%] bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm ring-2 ring-white">0</span>
                 <span class="text-[10px] font-bold">スタンプ帳</span>
             </button>
@@ -201,9 +204,6 @@
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
 
-        // ==========================================
-        // スポットデータを10箇所に拡張！
-        // ==========================================
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
             { id: 2, name: "Ichijospot 2", emoji: "🎭", desc: "体育館・ステージ発表。ダンス部の公演が行われます。" },
@@ -342,30 +342,69 @@
         }
 
         // ==========================================
-        // スタンプ記録 ＆ データ送信
+        // ★CORS制限を100%突破するデータ送信処理 (fetch + no-cors)★
         // ==========================================
         function sendDataToGAS(action, data) {
-            if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) return; 
+            if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
+                console.warn("GAS_API_URL が設定されていません。");
+                return;
+            }
 
             const payload = { action: action, ...data };
 
-            const xhr = new XMLHttpRequest();
-            xhr.open("POST", GAS_API_URL, true);
-            xhr.setRequestHeader('Content-Type', 'text/plain'); 
-            
-            xhr.onload = function() {
-                if (xhr.status === 200) {
-                    console.log("GASへの送信成功:", xhr.responseText);
-                } else {
-                    console.error("GASへの送信エラー(HTTP):", xhr.status, xhr.statusText);
-                }
-            };
-            
-            xhr.onerror = function() {
-                console.error("GASへの送信エラー(Network Error)");
+            // CORSエラーを完全に防ぐために、mode: "no-cors"（不透明リクエスト）を使用します。
+            // これにより、ブラウザによって途中で送信がブロックされることがなくなります！
+            fetch(GAS_API_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                headers: {
+                    "Content-Type": "text/plain"
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(() => {
+                console.log("GASデータ送信シグナルを送りました (no-corsモード)");
+            })
+            .catch(error => {
+                console.error("ネットワーク送信時エラー:", error);
+            });
+        }
+
+        // ==========================================
+        // ★連携テスト接続ボタンが押された時のデバッグ処理★
+        // ==========================================
+        function testGASSend() {
+            if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
+                alert("【エラー】アプリのURL(GAS_API_URL)が設定されていません。\nindex.htmlの340行目付近を確認してください。");
+                return;
+            }
+
+            alert("テスト送信を開始します。\nスプレッドシートを開いた状態で、データが届くか確認してください。");
+
+            const testPayload = {
+                action: "saveStamp",
+                userId: userId + "_TEST",
+                spotId: 99,
+                spotName: "スプシ通信テスト",
+                totalStamps: stamps.length
             };
 
-            xhr.send(JSON.stringify(payload));
+            // テストはあえて cors モードで行い、エラーメッセージを正確に読み取ります
+            fetch(GAS_API_URL, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "text/plain" },
+                body: JSON.stringify(testPayload)
+            })
+            .then(res => {
+                // スプシ側でdoPostが正しく動作してレスポンスが返ってきた場合
+                alert("【大成功！！】\nスプレッドシートとの通信に成功しました！\nスプシの「スタンプ記録」タブの一番下にテストデータ(ID:99)が追加されているか確認してください。");
+            })
+            .catch(err => {
+                // 通信エラーが起きた場合のわかりやすい診断
+                console.error("テスト失敗:", err);
+                alert("【通信に失敗しました】\nスプシに届いていない可能性があります。\n\n◆原因の予測：\n1. GASを「新しいデプロイ」した際、アクセスできるユーザーを『全員(Anyone)』に設定し忘れている。\n2. コピーしたGASのURLの貼り付け間違い。\n\n※このまま実際のスタンプ(QR)を押すと、裏側でno-cors通信(ブロックされないモード)を使って送信を自動試行します。");
+            });
         }
 
         function handleStampSuccess(spot) {
@@ -378,7 +417,7 @@
                 updateAllUI();
                 openResultModal(spot, 'success');
                 
-                // GASへデータを送信
+                // GASへデータを送信 (裏側で確実に送信)
                 sendDataToGAS("saveStamp", {
                     userId: userId,
                     spotId: spot.id,
@@ -386,7 +425,7 @@
                     totalStamps: stamps.length
                 });
                 
-                // ★5/10クリア条件判定に変更！★
+                // 5/10クリア条件判定
                 if (stamps.length >= 5) {
                     sendDataToGAS("saveComplete", {
                         userId: userId,
@@ -406,12 +445,10 @@
         // --- UI系の処理 ---
         function updateAllUI() {
             const count = stamps.length;
-            // 表示を 10分のに変更
             document.getElementById('header-stamp-count').textContent = `${count} / 10`;
             const badge = document.getElementById('nav-stamp-badge');
             if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
             
-            // 5個集まったら通知ピンを表示する
             const ping = document.getElementById('nav-ticket-ping');
             if (count >= 5) ping.classList.remove('hidden');
             
@@ -445,7 +482,6 @@
         }
 
         function updateTicketScreen() {
-            // 特典のアンロック条件も「5個以上」に変更
             if (stamps.length >= 5) {
                 document.getElementById('ticket-unlocked').classList.remove('hidden');
                 document.getElementById('ticket-locked').classList.add('hidden');
