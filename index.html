@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>文化祭QRスタンプラリー</title>
@@ -200,7 +200,7 @@
 
     <script>
         // ==========================================
-        // ★★★ ここに控えたGASのURLを貼り付けてください ★★★
+        // ★★★ ここに新しくデプロイしたGASのウェブアプリURLを貼り付けてください ★★★
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
 
@@ -342,7 +342,7 @@
         }
 
         // ==========================================
-        // ★CORS制限を100%突破するデータ送信処理 (fetch + no-cors)★
+        // ★CORS制限を完全回避しつつエラーを取得するデータ送信処理★
         // ==========================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
@@ -352,18 +352,20 @@
 
             const payload = { action: action, ...data };
 
-            // CORSエラーを完全に防ぐために、mode: "no-cors"（不透明リクエスト）を使用します。
-            // これにより、ブラウザによって途中で送信がブロックされることがなくなります！
             fetch(GAS_API_URL, {
                 method: "POST",
-                mode: "no-cors", 
                 headers: {
                     "Content-Type": "text/plain"
                 },
                 body: JSON.stringify(payload)
             })
-            .then(() => {
-                console.log("GASデータ送信シグナルを送りました (no-corsモード)");
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.status === "error") {
+                    alert("【スプシ書き込みエラー】\n" + resData.message);
+                } else {
+                    console.log("GASへの送信成功:", resData);
+                }
             })
             .catch(error => {
                 console.error("ネットワーク送信時エラー:", error);
@@ -375,7 +377,7 @@
         // ==========================================
         function testGASSend() {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
-                alert("【エラー】アプリのURL(GAS_API_URL)が設定されていません。\nindex.htmlの340行目付近を確認してください。");
+                alert("【エラー】アプリのURL(GAS_API_URL)が設定されていません。\nindex.htmlの250行目付近を確認してください。");
                 return;
             }
 
@@ -389,21 +391,22 @@
                 totalStamps: stamps.length
             };
 
-            // テストはあえて cors モードで行い、エラーメッセージを正確に読み取ります
             fetch(GAS_API_URL, {
                 method: "POST",
-                mode: "cors",
                 headers: { "Content-Type": "text/plain" },
                 body: JSON.stringify(testPayload)
             })
-            .then(res => {
-                // スプシ側でdoPostが正しく動作してレスポンスが返ってきた場合
-                alert("【大成功！！】\nスプレッドシートとの通信に成功しました！\nスプシの「スタンプ記録」タブの一番下にテストデータ(ID:99)が追加されているか確認してください。");
+            .then(res => res.json())
+            .then(resData => {
+                if (resData.status === "success") {
+                    alert("【大成功！！】\nスプレッドシートとの通信に完全に成功しました！\nスプシの画面を更新（F5）して、「スタンプ記録」タブの一番下にテストデータ(ID:99)が追加されているか確認してください。");
+                } else {
+                    alert("【GASエラーが発生しました】\nスプシURLが間違っているか、権限がありません。\n\n詳細メッセージ:\n" + resData.message);
+                }
             })
             .catch(err => {
-                // 通信エラーが起きた場合のわかりやすい診断
                 console.error("テスト失敗:", err);
-                alert("【通信に失敗しました】\nスプシに届いていない可能性があります。\n\n◆原因の予測：\n1. GASを「新しいデプロイ」した際、アクセスできるユーザーを『全員(Anyone)』に設定し忘れている。\n2. コピーしたGASのURLの貼り付け間違い。\n\n※このまま実際のスタンプ(QR)を押すと、裏側でno-cors通信(ブロックされないモード)を使って送信を自動試行します。");
+                alert("【接続に失敗しました】\nウェブ上のGASとの通信自体が遮断されました。\n\nエラー内容: " + err.message + "\n\n◆確認項目：\n1. GASを「新しいデプロイ」した際、アクセスできるユーザーを『全員(Anyone)』に設定し忘れている。\n2. コピーしたGASのURLの貼り付け間違い。");
             });
         }
 
