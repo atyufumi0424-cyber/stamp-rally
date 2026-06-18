@@ -55,6 +55,13 @@
                 
                 <!-- 初期UI（ボタン） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
+                    
+                    <!-- ユーザー名表示 -->
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-4 text-center">
+                        <p class="text-[10px] text-indigo-400 font-bold">参加中のプレイヤー</p>
+                        <p id="display-user-name" class="font-bold text-indigo-900 text-sm">読み込み中...</p>
+                    </div>
+
                     <h2 class="text-2xl font-bold text-indigo-900 mb-2">QRコードを読み取る</h2>
                     <p class="text-sm text-slate-500 text-center mb-6">
                         カメラを起動して、スポットにある<br/>QRコードをかざしてください。
@@ -78,13 +85,6 @@
                     <!-- エラーメッセージ用 -->
                     <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
                         <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
-                    </div>
-
-                    <!-- ★運営用・スプレッドシート連携テスト接続ボタン★ -->
-                    <div class="mt-8 pt-4 border-t border-slate-200 w-full">
-                        <button onclick="testGASSend()" class="w-full py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg shadow transition-colors flex items-center justify-center">
-                            <i data-lucide="database" class="w-4 h-4 mr-1"></i>スプシ接続テストを実行
-                        </button>
                     </div>
                 </div>
 
@@ -133,6 +133,11 @@
                             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-inner">
                                 <p class="font-bold text-indigo-800 text-xl mb-1">模擬店 100円割引券</p>
                             </div>
+                            <!-- 獲得者の氏名を表示して本人確認に使用 -->
+                            <div class="bg-slate-100 rounded-xl py-2 px-4 mb-4 text-center border border-slate-200">
+                                <p class="text-[9px] text-slate-400 font-bold">獲得者(フルネーム)</p>
+                                <p id="ticket-user-name" class="font-bold text-slate-800 text-sm">--</p>
+                            </div>
                             <p class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">生徒会本部または景品交換所で<br/>この画面を提示してください。</p>
                         </div>
                     </div>
@@ -173,6 +178,28 @@
             </div>
         </div>
 
+        <!-- 最初のお名前入力モーダル（フルネーム強制） -->
+        <div id="name-input-modal" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-md z-[5000] flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-100 animate-fade-in-up">
+                <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
+                    <i data-lucide="user-check" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-indigo-900 mb-2">お名前を入力してください</h3>
+                <p class="text-xs text-slate-500 mb-6 leading-relaxed px-2">
+                    景品交換所での本人確認のために使用します。<br><strong>名字と名前（フルネーム）</strong>を正しく入力してください。
+                </p>
+                
+                <div class="space-y-4 mb-6">
+                    <input type="text" id="fullname-input" placeholder="例：一条 太郎" class="w-full px-4 py-3.5 bg-slate-100 border-2 border-slate-200 rounded-xl text-center font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors">
+                    <p id="name-validation-error" class="hidden text-xs text-red-500 font-bold"><i data-lucide="alert-circle" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>名字と名前（フルネーム）を入力してください</p>
+                </div>
+
+                <button onclick="submitName()" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors flex items-center justify-center">
+                    スタンプラリーを開始する
+                </button>
+            </div>
+        </div>
+
         <!-- ボトムナビゲーション -->
         <nav class="bg-white border-t border-slate-200 flex justify-around px-2 pt-2 z-50 shrink-0 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)] relative">
             <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn flex flex-col items-center w-1/3 py-2 text-indigo-600 transition-colors">
@@ -199,7 +226,7 @@
 
     <script>
         // ==========================================
-        // ★★★ ここに控えたGASのURLを正しく貼り付けてください ★★★
+        // ★★★ あなたの最新のGASのURLをセット済みです ★★★
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
 
@@ -227,12 +254,45 @@
             localStorage.setItem('ichijo_festival_user_id', userId);
         }
 
+        let userName = localStorage.getItem('ichijo_festival_user_name');
+
         function init() {
+            lucide.createIcons();
+            if (!userName) {
+                document.getElementById('name-input-modal').classList.remove('hidden');
+            } else {
+                completeInit();
+            }
+        }
+
+        function submitName() {
+            const input = document.getElementById('fullname-input');
+            const nameValue = input.value.trim();
+            const errorElement = document.getElementById('name-validation-error');
+            
+            const hasSpace = nameValue.includes(' ') || nameValue.includes('　');
+            
+            if (nameValue.length < 2 || !hasSpace) {
+                errorElement.classList.remove('hidden');
+                lucide.createIcons();
+                return;
+            }
+            
+            errorElement.classList.add('hidden');
+            userName = nameValue;
+            localStorage.setItem('ichijo_festival_user_name', userName);
+            document.getElementById('name-input-modal').classList.add('hidden');
+            completeInit();
+        }
+
+        function completeInit() {
+            document.getElementById('display-user-name').textContent = userName;
+            document.getElementById('ticket-user-name').textContent = userName;
+
             const savedData = localStorage.getItem('ichijo_festival_stamps');
             if (savedData) {
                 try { stamps = JSON.parse(savedData); } catch (e) { stamps = []; }
             }
-            lucide.createIcons();
             updateAllUI();
         }
 
@@ -334,7 +394,7 @@
         }
 
         // ==========================================
-        // ★CORS制限を突破するデータ送信（非同期フォームシミュレーション）★
+        // データ送信処理（no-cors + iframe）
         // ==========================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
@@ -342,10 +402,12 @@
                 return;
             }
 
-            const payload = { action: action, ...data };
+            const payload = { 
+                action: action, 
+                userName: userName, 
+                ...data 
+            };
 
-            // fetchの代わりに、セキュリティ(CORS)の壁を受けない「フォームデータ送信」として裏側で送信
-            // これにより、Braveブラウザや学校用端末、アドブロック等によるJavaScript通信の遮断を100%回避します
             try {
                 const form = document.createElement("form");
                 form.method = "POST";
@@ -353,7 +415,6 @@
                 form.target = "hidden_iframe_" + Math.random().toString(36).substr(2, 5);
                 form.style.display = "none";
 
-                // 見えないiframeを作って、画面を遷移させずに送信する
                 const iframe = document.createElement("iframe");
                 iframe.name = form.target;
                 iframe.style.display = "none";
@@ -362,80 +423,20 @@
                 const input = document.createElement("input");
                 input.type = "hidden";
                 input.name = "payload";
-                // JSONのデータをそのままフォームのテキストとして入れる
                 input.value = JSON.stringify(payload);
                 form.appendChild(input);
 
                 document.body.appendChild(form);
                 form.submit();
 
-                // 送信完了後に要素を綺麗にお片付け
                 setTimeout(() => {
                     document.body.removeChild(form);
                     document.body.removeChild(iframe);
-                    console.log("フォーム送信シミュレーションが完了しました。");
+                    console.log("フォーム送信シグナル完了 (フルネーム送信)");
                 }, 1000);
 
             } catch (error) {
-                console.error("送信シミュレーションエラー:", error);
-            }
-        }
-
-        // ==========================================
-        // 改善版：おまじないを使った接続テスト & 診断プログラム
-        // ==========================================
-        function testGASSend() {
-            if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
-                alert("【診断結果：失敗】\nアプリのURL(GAS_API_URL)が設定されていません。\nindex.htmlの250行目付近を確認してください。");
-                return;
-            }
-
-            // URLの末尾のチェック（/devになっていないか）
-            if (GAS_API_URL.trim().endsWith("/dev")) {
-                alert("【診断結果：警告！】\nGASのURLの末尾が「/dev」になっています！\n\n「/dev」のURLは、あなた自身のGoogleアカウントにログインしている端末からしか書き込めないテスト用のURLです。これだと他のスマホやシークレットモードでは100%接続失敗になります。\n\n必ず、GASの「デプロイ」画面から新バージョンを発行し、「/exec」で終わるURLを取得してindex.htmlに貼り直してください！");
-                return;
-            }
-
-            alert("通信接続テストを開始します。\nスプレッドシートを開いてお待ちください。");
-
-            const testPayload = {
-                action: "saveStamp",
-                userId: userId + "_TEST",
-                spotId: 99,
-                spotName: "接続デバッグテスト",
-                totalStamps: stamps.length
-            };
-
-            // 安全なフォーム送信をテスト
-            try {
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = GAS_API_URL;
-                form.target = "test_iframe";
-                form.style.display = "none";
-
-                const iframe = document.createElement("iframe");
-                iframe.name = form.target;
-                iframe.style.display = "none";
-                document.body.appendChild(iframe);
-
-                const input = document.createElement("input");
-                input.type = "hidden";
-                input.name = "payload";
-                input.value = JSON.stringify(testPayload);
-                form.appendChild(input);
-
-                document.body.appendChild(form);
-                form.submit();
-
-                setTimeout(() => {
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                    alert("【テスト送信を行いました！】\nブラウザのセキュリティ制限を受けない特別な方法で送信しました。\n\nスプレッドシート「データ集約用」を開き、画面を更新（F5キーなど）して「スタンプ記録」シートの一番下に『接続デバッグテスト(ID: 99)』のデータが追加されているか確認してください！\n\nもし追加されていれば大成功です！当日の本番データも100%この安全な方法で自動記録されます。");
-                }, 1500);
-
-            } catch (err) {
-                alert("【テスト送信エラー】\nローカルプログラム上で送信エラーが発生しました。\nエラー内容: " + err.message);
+                console.error("送信エラー:", error);
             }
         }
 
@@ -472,6 +473,8 @@
         }
 
         function updateAllUI() {
+            if (!userName) return; 
+            
             const count = stamps.length;
             document.getElementById('header-stamp-count').textContent = `${count} / 10`;
             const badge = document.getElementById('nav-stamp-badge');
