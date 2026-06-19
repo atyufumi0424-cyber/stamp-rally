@@ -241,7 +241,7 @@
         // ==========================================
         // ★★★ あなたの最新のGASのURLをセット済みです ★★★
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyC0q6-Uv6w4RAs0W0bK08B9e1q7Y0f5851_T6z2q3Y49y75a/exec"; 
 
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
@@ -412,7 +412,7 @@
         }
 
         // ==========================================
-        // データ送信処理（no-cors + iframe）
+        // データ送信処理（通信切断対策版）
         // ==========================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
@@ -447,11 +447,19 @@
                 document.body.appendChild(form);
                 form.submit();
 
+                // ★通信が完全に終わるまで待ってから削除するように改善
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        if (document.body.contains(form)) document.body.removeChild(form);
+                        if (document.body.contains(iframe)) document.body.removeChild(iframe);
+                    }, 500);
+                };
+
+                // 万が一のための安全装置（余裕を持って5秒後）
                 setTimeout(() => {
-                    document.body.removeChild(form);
-                    document.body.removeChild(iframe);
-                    console.log("フォーム送信シグナル完了 (フルネーム送信)");
-                }, 1000);
+                    if (document.body.contains(form)) document.body.removeChild(form);
+                    if (document.body.contains(iframe)) document.body.removeChild(iframe);
+                }, 5000);
 
             } catch (error) {
                 console.error("送信エラー:", error);
