@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>文化祭QRスタンプラリー</title>
@@ -25,20 +25,23 @@
         .animate-fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .animate-pulse-soft { animation: pulse-soft 2s infinite; }
+        
+        /* 下部と上部のセーフエリア（見切れ防止）を最適化 */
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
-        .pt-safe { padding-top: max(env(safe-area-inset-top), 0px); }
+        .pt-safe { padding-top: max(env(safe-area-inset-top), 16px); } /* 最低16pxの余白を強制確保 */
     </style>
 </head>
 <body class="bg-indigo-900 flex justify-center h-screen overflow-hidden">
 
     <div class="flex flex-col h-full w-full max-w-md bg-white shadow-2xl relative overflow-hidden">
         
-        <!-- ヘッダー -->
+        <!-- ヘッダー（pt-safeを適用して上部見切れを完全防止） -->
         <header class="bg-indigo-600 text-white p-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
             <div class="flex flex-col">
                 <h1 class="text-xl font-bold tracking-wider leading-tight">文化祭スタンプラリー</h1>
                 <div class="flex items-center mt-1 space-x-2">
                     <p class="text-[10px] text-indigo-200">10箇所中 5箇所クリアで特典GET！</p>
+                    <!-- 時計表示エリア -->
                     <span id="current-time" class="text-[10px] font-mono bg-indigo-800 px-1.5 py-0.5 rounded border border-indigo-500 shadow-inner">00:00:00</span>
                 </div>
             </div>
@@ -52,8 +55,8 @@
         <main class="flex-1 relative overflow-y-auto overflow-x-hidden bg-slate-50">
             
             <!-- 1. スキャン（ホーム）画面 -->
-            <!-- h-full を min-h-full に変更し、justify-start にすることで確実にスクロールできるように改善 -->
-            <section id="tab-scan" class="tab-content active p-6 min-h-full bg-gradient-to-b from-blue-50 to-white items-center justify-start pt-10 pb-32">
+            <!-- pt-10 から pt-14 に広げ、上が詰まりすぎるのを解消 -->
+            <section id="tab-scan" class="tab-content active p-6 min-h-full bg-gradient-to-b from-blue-50 to-white items-center justify-start pt-14 pb-32">
                 
                 <!-- 初期UI（ボタン） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
@@ -80,7 +83,7 @@
                         <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
                     </div>
 
-                    <!-- テストデータリセットボタン（本番時は非表示、または削除して運用してください） -->
+                    <!-- テストデータリセットボタン -->
                     <div class="mt-12 pt-6 border-t border-slate-200 w-full text-center">
                         <button onclick="resetTestData()" class="text-xs text-slate-400 hover:text-slate-600 underline decoration-slate-300">テストデータをリセットして最初からやり直す</button>
                     </div>
@@ -225,9 +228,9 @@
 
     <script>
         // ==========================================
-        // ★★★ 必ず最新のGASのURLに変更してください ★★★
+        // ★★★ 必ず最新のGAS의 URLに変更してください ★★★
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycby2cGbRQvHmIE4koW5OLPX1YUW5a3xGfBqM34ZkE2bTRFMShUHB6IpISmHUU5JF-dcV/exec"; 
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyC0q6-Uv6w4RAs0W0bK08B9e1q7Y0f5851_T6z2q3Y49y75a/exec"; 
 
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
