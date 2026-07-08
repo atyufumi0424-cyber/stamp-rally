@@ -2,7 +2,8 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no">
+    <!-- ★ viewport-fit=cover を追加してセーフエリアを正しく認識させます -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>文化祭QRスタンプラリー</title>
@@ -14,7 +15,6 @@
     <style>
         body { font-family: 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* タブの表示・非表示とフレックスボックスの統一 */
         .tab-content { display: none; }
         .tab-content.active { display: flex; flex-direction: column; }
 
@@ -26,22 +26,21 @@
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .animate-pulse-soft { animation: pulse-soft 2s infinite; }
         
-        /* 下部と上部のセーフエリア（見切れ防止）を最適化 */
-        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 12px); }
-        .pt-safe { padding-top: max(env(safe-area-inset-top), 16px); } /* 最低16pxの余白を強制確保 */
+        /* ★ 上下の余白を大幅に拡大し、時計やバッテリー表示との被りを完全に防ぎます */
+        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 24px); }
+        .pt-safe { padding-top: max(env(safe-area-inset-top), 48px); }
     </style>
 </head>
 <body class="bg-indigo-900 flex justify-center h-screen overflow-hidden">
 
     <div class="flex flex-col h-full w-full max-w-md bg-white shadow-2xl relative overflow-hidden">
         
-        <!-- ヘッダー（pt-safeを適用して上部見切れを完全防止） -->
-        <header class="bg-indigo-600 text-white p-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
+        <!-- ヘッダー -->
+        <header class="bg-indigo-600 text-white px-4 pb-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
             <div class="flex flex-col">
                 <h1 class="text-xl font-bold tracking-wider leading-tight">文化祭スタンプラリー</h1>
                 <div class="flex items-center mt-1 space-x-2">
                     <p class="text-[10px] text-indigo-200">10箇所中 5箇所クリアで特典GET！</p>
-                    <!-- 時計表示エリア -->
                     <span id="current-time" class="text-[10px] font-mono bg-indigo-800 px-1.5 py-0.5 rounded border border-indigo-500 shadow-inner">00:00:00</span>
                 </div>
             </div>
@@ -51,17 +50,15 @@
             </div>
         </header>
 
-        <!-- メインコンテンツ (スクロールをここで一括管理) -->
+        <!-- メインコンテンツ -->
         <main class="flex-1 relative overflow-y-auto overflow-x-hidden bg-slate-50">
             
             <!-- 1. スキャン（ホーム）画面 -->
-            <!-- pt-10 から pt-14 に広げ、上が詰まりすぎるのを解消 -->
             <section id="tab-scan" class="tab-content active p-6 min-h-full bg-gradient-to-b from-blue-50 to-white items-center justify-start pt-14 pb-32">
                 
                 <!-- 初期UI（ボタン） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
                     
-                    <!-- ユーザー名表示 -->
                     <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-6 w-full text-center">
                         <p class="text-[10px] text-indigo-400 font-bold">参加中のプレイヤー</p>
                         <p id="display-user-name" class="font-bold text-indigo-900 text-sm">読み込み中...</p>
@@ -72,13 +69,11 @@
                         カメラを起動して、スポットにある<br/>QRコードをかざしてください。
                     </p>
 
-                    <!-- ライブカメラ起動ボタン -->
                     <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-48 h-48 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 mb-6 shrink-0">
                         <i data-lucide="scan" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
                         <span class="font-bold text-xl">カメラを起動</span>
                     </button>
 
-                    <!-- エラーメッセージ用 -->
                     <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
                         <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
                     </div>
@@ -128,13 +123,11 @@
                             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-inner">
                                 <p class="font-bold text-indigo-800 text-xl mb-1">模擬店 100円割引券</p>
                             </div>
-                            <!-- 獲得者の氏名を表示して本人確認に使用 -->
                             <div class="bg-slate-100 rounded-xl py-2 px-4 mb-4 text-center border border-slate-200">
                                 <p class="text-[9px] text-slate-400 font-bold">獲得者(フルネーム)</p>
                                 <p id="ticket-user-name" class="font-bold text-slate-800 text-sm">--</p>
                             </div>
                             <p id="ticket-instruction" class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">生徒会本部または景品交換所で<br/>この画面を提示してください。</p>
-                            <!-- チケット利用ボタン表示エリア -->
                             <div id="ticket-action-area"></div>
                         </div>
                     </div>
@@ -228,9 +221,9 @@
 
     <script>
         // ==========================================
-        // ★★★ 必ず最新のGAS의 URLに変更してください ★★★
+        // ★★★ 必ず最新のGASのURLに変更してください ★★★
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/home/projects/1IDzhSnOxeadT0vHh7Lb1_kSc3hCu9d1JheB1yTwQFkmMSSTq9mZTd91r/edit?hl=ja"; 
+        const GAS_API_URL = "ここにGASで発行されたURLを貼り付けてください"; 
 
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
