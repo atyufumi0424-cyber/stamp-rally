@@ -2,579 +2,159 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>文化祭QRスタンプラリー</title>
-    
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文化祭スタンプラリー - 設置用QRコード一覧</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Html5Qrcode -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    
+    <!-- QRコード生成ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .tab-content { display: none; }
-        .tab-content.active { display: flex; flex-direction: column; }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        body { font-family: 'Noto Sans JP', sans-serif; background-color: #f8fafc; }
+        .page-break { page-break-after: always; }
+        
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-area { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+            
+            /* A4縦サイズにぴったりフィットして改ページするスタイル */
+            .print-page {
+                height: 100vh;
+                page-break-after: always;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                box-sizing: border-box;
+                padding: 3rem !important;
+            }
+            .qr-card { 
+                border: 3px dashed #6366f1 !important; /* 切り取り用の点線 */
+                background: white !important;
+                padding: 2rem !important;
+                height: 43vh !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                box-sizing: border-box;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
         }
-        .animate-fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes pulse-soft {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        .animate-pulse-soft { animation: pulse-soft 2s infinite; }
-
-        /* 上部と下部の見切れ防止セーフエリアを確保 */
-        .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 24px); }
-        .pt-safe { padding-top: max(env(safe-area-inset-top), 48px); }
     </style>
 </head>
-<body class="bg-indigo-900 flex justify-center h-screen overflow-hidden">
+<body class="p-4 md:p-8">
 
-    <div class="flex flex-col h-full w-full max-w-md bg-white shadow-2xl relative overflow-hidden">
+    <div class="max-w-4xl mx-auto print-area">
         
-        <!-- ヘッダー (時計とスタンプ数) -->
-        <header class="bg-indigo-600 text-white p-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
-            <div class="flex flex-col">
-                <h1 class="text-xl font-bold tracking-wider leading-tight">文化祭スタンプラリー</h1>
-                <div class="flex items-center mt-1 space-x-2">
-                    <p class="text-[10px] text-indigo-200">10箇所中 5箇所クリアで特典GET！</p>
-                    <span id="current-time" class="text-[10px] font-mono bg-indigo-800 px-1.5 py-0.5 rounded border border-indigo-500 shadow-inner">00:00:00</span>
-                </div>
-            </div>
-            <div class="flex items-center bg-indigo-700 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner shrink-0">
-                <i data-lucide="trophy" class="w-4 h-4 text-yellow-400 mr-1"></i>
-                <span id="header-stamp-count" class="font-bold text-sm">0 / 10</span>
-            </div>
-        </header>
-
-        <!-- メインコンテンツ -->
-        <main class="flex-1 relative overflow-y-auto overflow-x-hidden bg-slate-50">
-            
-            <!-- 1. スキャン（ホーム）画面 -->
-            <section id="tab-scan" class="tab-content active p-6 min-h-full bg-gradient-to-b from-blue-50 to-white items-center justify-start pt-14 pb-32">
-                
-                <!-- 初期UI（ボタン） -->
-                <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
-                    <!-- ユーザー名表示 -->
-                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-6 w-full text-center">
-                        <p class="text-[10px] text-indigo-400 font-bold">参加中のプレイヤー</p>
-                        <p id="display-user-name" class="font-bold text-indigo-900 text-sm">読み込み中...</p>
-                    </div>
-
-                    <h2 class="text-2xl font-bold text-indigo-900 mb-2">QRコードを読み取る</h2>
-                    <p class="text-sm text-slate-500 text-center mb-8">
-                        カメラを起動して、スポットにある<br/>QRコードをかざしてください。
-                    </p>
-
-                    <!-- ライブカメラ起動ボタン -->
-                    <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-48 h-48 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 mb-6 shrink-0">
-                        <i data-lucide="scan" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
-                        <span class="font-bold text-xl">カメラを起動</span>
-                    </button>
-
-                    <!-- エラーメッセージ用 -->
-                    <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
-                        <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
-                    </div>
-
-                    <!-- テストデータリセットボタン -->
-                    <div class="mt-12 pt-6 border-t border-slate-200 w-full text-center">
-                        <button onclick="resetTestData()" class="text-xs text-slate-400 hover:text-slate-600 underline decoration-slate-300">テストデータをリセットして最初からやり直す</button>
-                    </div>
-                </div>
-
-                <!-- スキャン中UI（ライブカメラ） -->
-                <div id="scanner-ui" class="hidden w-full flex-col items-center animate-fade-in-up">
-                    <h2 class="text-xl font-bold text-indigo-900 mb-4">枠内にQRコードを合わせてください</h2>
-                    <div class="relative w-full max-w-[300px] mb-8 shrink-0">
-                        <div id="qr-reader" class="w-full bg-black rounded-3xl overflow-hidden border-4 border-indigo-400 shadow-[0_0_15px_rgba(79,70,229,0.3)]"></div>
-                        <div class="absolute inset-0 border-[3px] border-white/40 border-dashed rounded-3xl pointer-events-none m-6 animate-pulse-soft"></div>
-                    </div>
-                    <button onclick="stopScanner()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-8 py-3 rounded-full font-bold w-full max-w-[200px] transition-colors shadow-sm flex justify-center items-center">
-                        <i data-lucide="x" class="w-4 h-4 mr-1"></i>キャンセル
-                    </button>
-                </div>
-
-            </section>
-
-            <!-- 2. スタンプ帳画面 -->
-            <section id="tab-stamps" class="tab-content p-6 min-h-full bg-[#f8f9fa] pb-32">
-                <div class="flex flex-col items-center mb-6">
-                    <h2 class="text-2xl font-bold text-indigo-900 mb-1">スタンプコレクション</h2>
-                    <div class="w-16 h-1 bg-indigo-300 rounded-full mb-2"></div>
-                    <p class="text-sm text-slate-500">10箇所中、任意の5箇所を巡って特典GET！</p>
-                </div>
-                <div id="stamp-list-container" class="flex flex-col space-y-4"></div>
-            </section>
-
-            <!-- 3. 特典画面 -->
-            <section id="tab-ticket" class="tab-content p-6 min-h-full bg-slate-900 items-center justify-start pt-16 text-center pb-32">
-                <!-- 特典アンロック後 -->
-                <div id="ticket-unlocked" class="hidden w-full max-w-sm animate-fade-in-up">
-                    <div class="relative bg-gradient-to-br from-yellow-300 via-amber-400 to-yellow-600 p-1.5 rounded-[2rem] shadow-[0_0_40px_rgba(251,191,36,0.4)]">
-                        <div class="bg-white rounded-[1.7rem] p-8 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500"></div>
-                            <div class="relative">
-                                <i data-lucide="gift" class="w-16 h-16 mx-auto text-amber-500 mb-3 animate-bounce"></i>
-                            </div>
-                            <p class="text-xs font-bold text-amber-600 tracking-widest mb-1">5 SPOTS CLEARED</p>
-                            <h2 class="text-3xl font-black text-indigo-900 mb-6 border-b border-slate-200 pb-4">コンプリート特典</h2>
-                            <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-inner">
-                                <p class="font-bold text-indigo-800 text-xl mb-1">模擬店 100円割引券</p>
-                            </div>
-                            <!-- 獲得者の氏名を表示して本人確認に使用 -->
-                            <div class="bg-slate-100 rounded-xl py-2 px-4 mb-4 text-center border border-slate-200">
-                                <p class="text-[9px] text-slate-400 font-bold">獲得者(フルネーム)</p>
-                                <p id="ticket-user-name" class="font-bold text-slate-800 text-sm">--</p>
-                            </div>
-                            <p id="ticket-instruction" class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">生徒会本部または景品交換所で<br/>この画面を提示してください。</p>
-                            <!-- チケット利用ボタン表示エリア -->
-                            <div id="ticket-action-area"></div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- 特典ロック中 -->
-                <div id="ticket-locked" class="text-white flex flex-col items-center mt-8">
-                    <div class="w-24 h-24 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center mb-6 shadow-inner">
-                        <i data-lucide="trophy" class="w-10 h-10 text-slate-500"></i>
-                    </div>
-                    <h2 class="text-2xl font-bold mb-3 tracking-wide">まだ特典はありません</h2>
-                    <p class="text-slate-400 mb-10 text-sm leading-relaxed">10箇所中、お好きなスポットの<br>スタンプを5つ集めよう！</p>
-                    <button onclick="switchTab('scan')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-full font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-                        QRスキャンに戻る
-                    </button>
-                </div>
-            </section>
-        </main>
-
-        <!-- 獲得結果ポップアップ -->
-        <div id="result-modal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-95 transition-transform duration-300 relative" id="result-modal-content">
-                <button onclick="closeResultModal()" class="absolute top-4 right-4 bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 rounded-full p-2 transition-colors">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-                <div class="mt-4 mb-6 relative">
-                    <div id="modal-emoji" class="text-[5rem] leading-none relative z-10"></div>
-                </div>
-                <h3 id="modal-title" class="text-2xl font-bold text-indigo-900 mb-3"></h3>
-                <p id="modal-desc" class="text-sm text-slate-600 mb-6 leading-relaxed px-2"></p>
-                <div id="modal-status-box" class="p-4 rounded-2xl font-bold flex items-center justify-center mb-6 border transition-colors">
-                    <i data-lucide="check-circle" class="w-6 h-6 mr-2" id="modal-status-icon"></i>
-                    <span id="modal-status-text" class="text-lg"></span>
-                </div>
-                <button onclick="closeResultModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors">
-                    閉じる
-                </button>
-            </div>
-        </div>
-
-        <!-- 最初のお名前入力モーダル -->
-        <div id="name-input-modal" class="hidden absolute inset-0 bg-slate-900/90 backdrop-blur-md z-[5000] flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-100 animate-fade-in-up">
-                <div class="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-4 text-indigo-600">
-                    <i data-lucide="user-check" class="w-8 h-8"></i>
-                </div>
-                <h3 class="text-xl font-bold text-indigo-900 mb-2">お名前を入力してください</h3>
-                <p class="text-xs text-slate-500 mb-4 leading-relaxed px-2">
-                    本人確認をする場合に使用します。
+        <!-- ヘッダー（印刷時には自動で消えます） -->
+        <div class="no-print bg-white p-6 rounded-3xl shadow-lg border border-slate-200 mb-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-700 flex items-center mb-1">
+                    <span class="mr-2">📍</span>設置用スポットQRコード一覧（全14箇所）
+                </h1>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                    A4用紙1枚につき「2スポットずつ」配置され、切り取り線（点線）でカットしてそのままブースに貼ることができます。<br>
+                    全14クラス分のスポットが自動でレイアウトされています（絵文字なしバージョン）。
                 </p>
-                
-                <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 text-left">
-                    <p class="text-xs text-red-600 font-extrabold flex items-start leading-relaxed">
-                        <i data-lucide="alert-circle" class="w-5 h-5 mr-1.5 shrink-0 text-red-500"></i>
-                        <span>⚠️ 名字と名前の間に、必ず「スペース（半角または全角の空白）」を1つ空けて入力してください！</span>
-                    </p>
-                </div>
-                
-                <div class="space-y-4 mb-6">
-                    <input type="text" id="fullname-input" placeholder="例：一条 太郎" class="w-full px-4 py-3.5 bg-slate-100 border-2 border-slate-200 rounded-xl text-center font-bold text-lg focus:outline-none focus:border-indigo-500 transition-colors">
-                    <p id="name-validation-error" class="hidden text-xs text-red-500 font-bold"><i data-lucide="alert-circle" class="w-3.5 h-3.5 inline mr-1 -mt-0.5"></i>名字と名前の間にスペース（空白）を空けて入力してください</p>
-                </div>
-
-                <button onclick="submitName()" class="bg-indigo-600 hover:bg-indigo-700 text-white w-full py-4 rounded-xl font-bold text-lg shadow-md transition-colors flex items-center justify-center">
-                    スタンプラリーを開始する
-                </button>
             </div>
+            <button onclick="window.print()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all flex items-center shrink-0">
+                <span class="mr-2">🖨️</span>このまま印刷 / PDF保存
+            </button>
         </div>
 
-        <!-- ボトムナビゲーション -->
-        <nav class="bg-white border-t border-slate-200 flex justify-around px-2 pt-2 z-50 shrink-0 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)] absolute bottom-0 w-full">
-            <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn flex flex-col items-center w-1/3 py-2 text-indigo-600 transition-colors">
-                <div class="p-1 rounded-xl mb-1 transition-colors group-hover:bg-indigo-50" id="nav-icon-bg-scan"><i data-lucide="scan" class="w-6 h-6"></i></div>
-                <span class="text-[10px] font-bold">スキャン</span>
-            </button>
-            <button onclick="switchTab('stamps')" id="nav-stamps" class="nav-btn flex flex-col items-center w-1/3 py-2 text-slate-400 transition-colors relative">
-                <div class="p-1 rounded-xl mb-1 transition-colors" id="nav-icon-bg-stamps"><i data-lucide="map" class="w-6 h-6"></i></div>
-                <span id="nav-stamp-badge" class="hidden absolute top-1 right-[28%] bg-red-500 text-white text-[9px] font-bold px-1.5 rounded-full shadow-sm ring-2 ring-white">0</span>
-                <span class="text-[10px] font-bold">スタンプ帳</span>
-            </button>
-            <button onclick="switchTab('ticket')" id="nav-ticket" class="nav-btn flex flex-col items-center w-1/3 py-2 text-slate-400 transition-colors relative">
-                <div class="p-1 rounded-xl mb-1 transition-colors" id="nav-icon-bg-ticket"><i data-lucide="ticket" class="w-6 h-6"></i></div>
-                <span id="nav-ticket-ping" class="hidden absolute top-2 right-[30%] flex h-3 w-3">
-                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
-                </span>
-                <span class="text-[10px] font-bold">特典</span>
-            </button>
-        </nav>
+        <!-- 印刷用グリッド（A4サイズ1枚に2個ずつ綺麗に並びます） -->
+        <div id="spots-print-container" class="space-y-12">
+            <!-- JavaScriptでここに7ページ分の印刷用ブロックが自動生成されます -->
+        </div>
+
     </div>
 
     <script>
-        // ==========================================
-        // ★★★ あなたの最新のGASのURLをセットしてあります ★★★
-        // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
-
+        // 14箇所のスポット情報（スタンプラリーアプリのデータと完全一致・絵文字なし）
         const SPOTS = [
-            { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
-            { id: 2, name: "Ichijospot 2", emoji: "🎭", desc: "体育館・ステージ発表。ダンス部の公演が行われます。" },
-            { id: 3, name: "Ichijospot 3", emoji: "🎨", desc: "文化部展示エリア。写真部や美術部の作品が並びます。" },
-            { id: 4, name: "Ichijospot 4", emoji: "🍔", desc: "中庭・飲食スペース。焼きそばやフランクフルトを販売中。" },
-            { id: 5, name: "Ichijospot 5", emoji: "👻", desc: "お化け屋敷・アトラクション。悲鳴が絶えない人気スポット。" },
-            { id: 6, name: "Ichijospot 6", emoji: "☕", desc: "2年生の喫茶店。レトロな雰囲気で美味しい飲み物をどうぞ。" },
-            { id: 7, name: "Ichijospot 7", emoji: "🎸", desc: "中庭特設ステージ。バンド演奏によるライブパフォーマンス！" },
-            { id: 8, name: "Ichijospot 8", emoji: "🧪", desc: "科学部展示。面白い実験や不思議な科学体験ができます。" },
-            { id: 9, name: "Ichijospot 9", emoji: "📚", desc: "図書室の古本市。お気に入りの一冊が見つかるかも。" },
-            { id: 10, name: "Ichijospot 10", emoji: "🎯", desc: "縁日コーナー。射的や輪投げで豪華景品を狙おう！" }
+            { id: 1, name: "1年1組", label: "謎解き迷路", desc: "高校1年生のアトラクションスポット" },
+            { id: 2, name: "1年2組", label: "おばけやしき", desc: "高校1年生のアトラクションスポット" },
+            { id: 3, name: "1年3組", label: "おばけやしき", desc: "高校1年生のアトラクションスポット" },
+            { id: 4, name: "1年4組", label: "キッキングスナイパー", desc: "高校1年生のアトラクションスポット" },
+            { id: 5, name: "1年5組", label: "カジノ", desc: "高校1年生のアトラクションスポット" },
+            { id: 6, name: "1年6組", label: "遊園地", desc: "高校1年生のアトラクションスポット" },
+            { id: 7, name: "1年7組", label: "アーチ", desc: "高校1年生のアトラクションスポット" },
+            { id: 8, name: "2年1組", label: "缶バッジ・チェキ", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 9, name: "2年2組", label: "ラバーバンド・エコバッグ", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 10, name: "2年3組", label: "キーホルダー・ラバーバンド", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 11, name: "2年4組", label: "タオル・ステッカー", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 12, name: "2年5組", label: "タオル・目印チャーム", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 13, name: "2年6組", label: "ヘアバンド・前髪クリップ", desc: "高校2年生の物品販売・出展ブース" },
+            { id: 14, name: "2年7組", label: "缶バッジ・クリアボトル", desc: "高校2年生の物品販売・出展ブース" }
         ];
 
-        let stamps = [];
-        let html5QrCode = null; 
-        let isProcessing = false;
+        function generateSpotQRs() {
+            const container = document.getElementById('spots-print-container');
+            container.innerHTML = '';
 
-        let userName = localStorage.getItem('ichijo_festival_user_name');
-        let ticketUsed = localStorage.getItem('ichijo_festival_ticket_used') === 'true';
-
-        function init() {
-            lucide.createIcons();
-            startClock(); 
-            
-            if (!userName) {
-                document.getElementById('name-input-modal').classList.remove('hidden');
-            } else {
-                completeInit();
-            }
-        }
-
-        // 時計を動かす機能
-        function startClock() {
-            function updateClock() {
-                const now = new Date();
-                const h = String(now.getHours()).padStart(2, '0');
-                const m = String(now.getMinutes()).padStart(2, '0');
-                const s = String(now.getSeconds()).padStart(2, '0');
-                const clockEl = document.getElementById('current-time');
-                if (clockEl) {
-                    clockEl.textContent = `${h}:${m}:${s}`;
+            // 2個ずつのペア（A4用紙1枚分）に分けて配置します
+            for (let i = 0; i < SPOTS.length; i += 2) {
+                const pair = SPOTS.slice(i, i + 2);
+                
+                // 印刷1ページ分（A4縦）のコンテナ
+                const pageBlock = document.createElement('div');
+                pageBlock.className = 'print-page bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200 max-w-[800px] mx-auto flex flex-col justify-around gap-8';
+                
+                // 最後のページ以外は印刷用改ページを適用
+                if (i + 2 < SPOTS.length) {
+                    pageBlock.classList.add('page-break');
                 }
-            }
-            updateClock(); 
-            setInterval(updateClock, 1000);
-        }
 
-        // テストデータのリセット機能
-        function resetTestData() {
-            if (confirm("これまでのスタンプ記録やお名前のデータをすべて消去して、最初からやり直しますか？")) {
-                localStorage.removeItem('ichijo_festival_stamps');
-                localStorage.removeItem('ichijo_festival_user_name');
-                localStorage.removeItem('ichijo_festival_user_id');
-                localStorage.removeItem('ichijo_festival_ticket_used');
-                location.reload();
-            }
-        }
-
-        function submitName() {
-            const input = document.getElementById('fullname-input');
-            const nameValue = input.value.trim();
-            const errorElement = document.getElementById('name-validation-error');
-            
-            const hasSpace = nameValue.includes(' ') || nameValue.includes('　');
-            
-            if (nameValue.length < 2 || !hasSpace) {
-                errorElement.classList.remove('hidden');
-                lucide.createIcons();
-                return;
-            }
-            
-            errorElement.classList.add('hidden');
-            userName = nameValue;
-            localStorage.setItem('ichijo_festival_user_name', userName);
-            document.getElementById('name-input-modal').classList.add('hidden');
-            completeInit();
-        }
-
-        function completeInit() {
-            document.getElementById('display-user-name').textContent = userName;
-            document.getElementById('ticket-user-name').textContent = userName;
-
-            const savedData = localStorage.getItem('ichijo_festival_stamps');
-            if (savedData) {
-                try { stamps = JSON.parse(savedData); } catch (e) { stamps = []; }
-            }
-            updateAllUI();
-        }
-
-        function startScanner() {
-            document.getElementById('start-ui').classList.add('hidden');
-            document.getElementById('scanner-ui').classList.remove('hidden');
-            document.getElementById('scanner-ui').classList.add('flex');
-            document.getElementById('scan-error-msg').classList.add('hidden');
-            isProcessing = false;
-            
-            html5QrCode = new Html5Qrcode("qr-reader");
-            
-            html5QrCode.start(
-                { facingMode: "environment" },
-                { fps: 10, qrbox: { width: 220, height: 220 } },
-                (decodedText) => processScanResult(decodedText),
-                (errorMessage) => {} 
-            ).catch((err) => {
-                console.warn("背面カメラ起動失敗。内カメラ等で再試行します:", err);
-                html5QrCode.start(
-                    { facingMode: "user" },
-                    { fps: 10, qrbox: { width: 220, height: 220 } },
-                    (decodedText) => processScanResult(decodedText),
-                    (errorMessage) => {}
-                ).catch((err2) => {
-                    console.error("Camera start error:", err2);
-                    stopScanner();
-                    showScanError("カメラを起動できませんでした。<br>ブラウザの権限設定を見直してください。");
-                });
-            });
-        }
-
-        function stopScanner() {
-            if (html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    html5QrCode = null;
-                }).catch(err => console.error(err));
-            }
-            document.getElementById('scanner-ui').classList.add('hidden');
-            document.getElementById('scanner-ui').classList.remove('flex');
-            document.getElementById('start-ui').classList.remove('hidden');
-        }
-
-        function processScanResult(decodedText) {
-            if (isProcessing) return;
-            const match = decodedText.match(/^ICHIJO_SPOT_(\d+)$/);
-            if (match) {
-                const spotId = parseInt(match[1]);
-                const spot = SPOTS.find(s => s.id === spotId);
-                if (spot) {
-                    isProcessing = true;
-                    stopScanner();
-                    handleStampSuccess(spot);
-                } else {
-                    showScanError("登録されていないQRコードです。");
-                }
-            } else {
-                showScanError("専用のQRコードではありません。");
-            }
-        }
-
-        function showScanError(msg) {
-            const errorContainer = document.getElementById('scan-error-msg');
-            document.getElementById('scan-error-text').innerHTML = `<i data-lucide="alert-circle" class="w-4 h-4 inline mr-1 -mt-1"></i>${msg}`;
-            errorContainer.classList.remove('hidden');
-            lucide.createIcons();
-            setTimeout(() => { errorContainer.classList.add('hidden'); }, 5000);
-        }
-
-        // ==========================================
-        // データ送信処理（絶対にブロックされない画像通信方式）
-        // ==========================================
-        function sendDataToGAS(action, data) {
-            if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
-                console.warn("GAS_API_URL が設定されていません。");
-                return;
-            }
-
-            const payload = { 
-                action: action, 
-                userName: userName, 
-                ...data 
-            };
-
-            try {
-                const queryString = Object.keys(payload)
-                    .map(key => key + '=' + encodeURIComponent(payload[key]))
-                    .join('&');
-                const urlWithParams = GAS_API_URL + '?' + queryString;
-
-                // 画像オブジェクトを作成してリクエストを走らせることでブラウザ制限を完全迂回します（二重送信防止のためこれ1本に統一！）
-                const img = new Image();
-                img.src = urlWithParams;
-
-                console.log("データ送信完了:", payload);
-            } catch (error) {
-                console.error("送信エラー:", error);
-            }
-        }
-
-        function handleStampSuccess(spot) {
-            const alreadyGot = stamps.includes(spot.id);
-            
-            if (!alreadyGot) {
-                stamps.push(spot.id);
-                localStorage.setItem('ichijo_festival_stamps', JSON.stringify(stamps));
-                updateAllUI();
-                openResultModal(spot, 'success');
-                
-                // ★画像の読み込み擬似通信（sendDataToGAS）を使って、確実にGASへ送信します！
-                sendDataToGAS("saveStamp", {
-                    userId: userName, 
-                    spotId: spot.id,
-                    spotName: spot.name,
-                    totalStamps: stamps.length
-                });
-                
-                if (stamps.length >= 5) {
-                    sendDataToGAS("saveComplete", {
-                        userId: userName,
-                        totalStamps: stamps.length
-                    });
-
-                    setTimeout(() => {
-                        closeResultModal();
-                        switchTab('ticket');
-                    }, 2500);
-                }
-            } else {
-                openResultModal(spot, 'already');
-            }
-        }
-
-        function updateAllUI() {
-            if (!userName) return; 
-            
-            const count = stamps.length;
-            document.getElementById('header-stamp-count').textContent = `${count} / 10`;
-            const badge = document.getElementById('nav-stamp-badge');
-            if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
-            
-            const ping = document.getElementById('nav-ticket-ping');
-            if (count >= 5) ping.classList.remove('hidden');
-            
-            renderStamps();
-            updateTicketScreen();
-        }
-
-        function renderStamps() {
-            const container = document.getElementById('stamp-list-container');
-            container.innerHTML = ''; 
-            SPOTS.forEach((spot, index) => {
-                const isStamped = stamps.includes(spot.id);
-                const card = document.createElement('div');
-                card.className = `flex items-center p-4 rounded-2xl border transition-all duration-300 ${isStamped ? 'bg-white border-indigo-200 shadow-md transform hover:-translate-y-1' : 'bg-slate-50 border-slate-200 border-dashed'}`;
-                card.innerHTML = `
-                    <div class="relative w-16 h-16 rounded-full flex items-center justify-center text-3xl mr-4 flex-shrink-0 transition-all ${isStamped ? 'bg-indigo-50 text-indigo-900' : 'bg-slate-200 opacity-40 grayscale'}">
-                        ${spot.emoji}
-                        ${!isStamped ? `<span class="absolute text-[10px] font-bold text-slate-500 -bottom-1 bg-white px-2 rounded-full border border-slate-200">No.${spot.id}</span>` : ''}
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <h3 class="font-bold text-lg truncate ${isStamped ? 'text-indigo-900' : 'text-slate-400'}">${spot.name}</h3>
-                        <p class="text-xs mt-1 line-clamp-2 ${isStamped ? 'text-slate-600' : 'text-slate-400'}">${isStamped ? spot.desc : 'まだ見つけていません'}</p>
-                    </div>
-                    <div class="w-8 flex justify-end">
-                        ${isStamped ? `<div class="w-7 h-7 rounded-full bg-green-500 text-white flex items-center justify-center shadow-sm"><i data-lucide="check" class="w-4 h-4 text-white font-bold"></i></div>` : `<div class="w-7 h-7 rounded-full border-2 border-slate-200"></div>`}
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-            lucide.createIcons();
-        }
-
-        function updateTicketScreen() {
-            if (stamps.length >= 5) {
-                document.getElementById('ticket-unlocked').classList.remove('hidden');
-                document.getElementById('ticket-locked').classList.add('hidden');
-                
-                const actionArea = document.getElementById('ticket-action-area');
-                const instruction = document.getElementById('ticket-instruction');
-                
-                if (ticketUsed) {
-                    instruction.innerHTML = "この特典は利用済みです。";
-                    actionArea.innerHTML = `
-                        <div class="bg-slate-200 text-slate-500 py-3 rounded-xl font-bold flex items-center justify-center border-2 border-slate-300">
-                            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>利用済み
+                pair.forEach(spot => {
+                    const qrText = `ICHIJO_SPOT_${spot.id}`;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'qr-card bg-slate-50 p-8 rounded-3xl border-2 border-indigo-200 flex flex-row items-center justify-between text-left h-[280px] relative';
+                    
+                    card.innerHTML = `
+                        <!-- 左側：ブース情報 -->
+                        <div class="flex-1 pr-8 flex flex-col justify-between h-full">
+                            <div>
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="bg-indigo-600 text-white font-black text-sm px-4 py-1.5 rounded-full">${spot.name}</span>
+                                </div>
+                                <h2 class="text-3xl font-black text-indigo-950 mt-1">${spot.label}</h2>
+                                <p class="text-sm text-slate-500 font-bold mt-2 leading-relaxed">${spot.desc}</p>
+                            </div>
+                            <div class="text-[10px] text-slate-400 font-mono tracking-wider mt-4 font-bold">
+                                アプリでカメラを起動し、このQRコードをスキャンしよう！
+                            </div>
+                        </div>
+                        
+                        <!-- 右側：QRコード表示領域 -->
+                        <div class="flex flex-col items-center justify-center shrink-0 bg-white p-4 rounded-2xl border border-slate-100 shadow-md">
+                            <div id="qrcode-${spot.id}"></div>
                         </div>
                     `;
-                } else {
-                    instruction.innerHTML = "生徒会本部または景品交換所でこの画面を提示し、<br/>スタッフの前で「利用する」ボタンを押してください。";
-                    actionArea.innerHTML = `
-                        <button onclick="useTicket()" class="w-full bg-red-500 hover:bg-red-600 text-white py-4 rounded-xl font-bold shadow-lg transition-colors flex items-center justify-center text-lg animate-pulse-soft border-b-4 border-red-700 active:translate-y-1 active:border-b-0">
-                            <i data-lucide="ticket" class="w-6 h-6 mr-2"></i>特典を利用する
-                        </button>
-                    `;
-                }
-                lucide.createIcons();
-            } else {
-                document.getElementById('ticket-unlocked').classList.add('hidden');
-                document.getElementById('ticket-locked').classList.remove('hidden');
+                    
+                    pageBlock.appendChild(card);
+                });
+
+                container.appendChild(pageBlock);
+
+                // 各スポットのQRコード画像を生成
+                pair.forEach(spot => {
+                    const qrText = `ICHIJO_SPOT_${spot.id}`;
+                    new QRCode(document.getElementById(`qrcode-${spot.id}`), {
+                        text: qrText,
+                        width: 160,
+                        height: 140, 
+                        colorDark : "#1e1b4b",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.M
+                    });
+                });
             }
         }
 
-        function useTicket() {
-            if (confirm("特典を利用済みにしますか？\n※必ずスタッフの目の前で「OK」を押してください。取り消しはできません。")) {
-                ticketUsed = true;
-                localStorage.setItem('ichijo_festival_ticket_used', 'true');
-                updateTicketScreen();
-            }
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(`tab-${tabId}`).classList.add('active');
-            document.querySelectorAll('.nav-btn').forEach(el => el.classList.replace('text-indigo-600', 'text-slate-400'));
-            document.querySelectorAll('[id^="nav-icon-bg-"]').forEach(el => el.classList.remove('bg-indigo-50', 'text-indigo-600'));
-            const activeNav = document.getElementById(`nav-${tabId}`);
-            const activeIconBg = document.getElementById(`nav-icon-bg-${tabId}`);
-            if (activeNav) activeNav.classList.replace('text-slate-400', 'text-indigo-600');
-            if (activeIconBg) activeIconBg.classList.add('bg-indigo-50', 'text-indigo-600');
-            if (tabId !== 'scan') stopScanner();
-        }
-
-        function openResultModal(spot, type) {
-            document.getElementById('modal-emoji').textContent = spot.emoji;
-            document.getElementById('modal-title').textContent = spot.name;
-            document.getElementById('modal-desc').textContent = spot.desc;
-            const statusBox = document.getElementById('modal-status-box');
-            const statusText = document.getElementById('modal-status-text');
-            const statusIcon = document.getElementById('modal-status-icon');
-            if (type === 'success') {
-                statusBox.className = "p-4 rounded-2xl font-bold flex items-center justify-center mb-6 border bg-emerald-50 border-emerald-200 text-emerald-700";
-                statusText.textContent = "スタンプを獲得しました！";
-                statusIcon.setAttribute('data-lucide', 'check-circle-2');
-            } else {
-                statusBox.className = "p-4 rounded-2xl font-bold flex items-center justify-center mb-6 border bg-slate-50 border-slate-200 text-slate-600";
-                statusText.textContent = "このスタンプは獲得済みです";
-                statusIcon.setAttribute('data-lucide', 'info');
-            }
-            const modal = document.getElementById('result-modal');
-            const content = document.getElementById('result-modal-content');
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); content.classList.remove('scale-95'); }, 10);
-            lucide.createIcons();
-        }
-
-        function closeResultModal() {
-            const modal = document.getElementById('result-modal');
-            const content = document.getElementById('result-modal-content');
-            modal.classList.add('opacity-0');
-            content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        window.onload = init;
+        window.onload = function() {
+            generateSpotQRs();
+        };
     </script>
 </body>
 </html>
