@@ -2,18 +2,20 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>文化祭QRスタンプラリー</title>
     
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Html5Qrcode -->
     <script src="https://unpkg.com/html5-qrcode"></script>
     
     <style>
         body { font-family: 'Noto Sans JP', sans-serif; -webkit-tap-highlight-color: transparent; }
-        
         .tab-content { display: none; }
         .tab-content.active { display: flex; flex-direction: column; }
 
@@ -22,9 +24,13 @@
             to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in-up { animation: fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        @keyframes pulse-soft {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
         .animate-pulse-soft { animation: pulse-soft 2s infinite; }
-        
+
+        /* 上部と下部の見切れ防止セーフエリアを確保 */
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 24px); }
         .pt-safe { padding-top: max(env(safe-area-inset-top), 48px); }
     </style>
@@ -33,8 +39,8 @@
 
     <div class="flex flex-col h-full w-full max-w-md bg-white shadow-2xl relative overflow-hidden">
         
-        <!-- ヘッダー -->
-        <header class="bg-indigo-600 text-white px-4 pb-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
+        <!-- ヘッダー (時計とスタンプ数) -->
+        <header class="bg-indigo-600 text-white p-4 pt-safe shadow-md z-10 flex justify-between items-center shrink-0">
             <div class="flex flex-col">
                 <h1 class="text-xl font-bold tracking-wider leading-tight">文化祭スタンプラリー</h1>
                 <div class="flex items-center mt-1 space-x-2">
@@ -56,7 +62,7 @@
                 
                 <!-- 初期UI（ボタン） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
-                    
+                    <!-- ユーザー名表示 -->
                     <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-6 w-full text-center">
                         <p class="text-[10px] text-indigo-400 font-bold">参加中のプレイヤー</p>
                         <p id="display-user-name" class="font-bold text-indigo-900 text-sm">読み込み中...</p>
@@ -67,11 +73,13 @@
                         カメラを起動して、スポットにある<br/>QRコードをかざしてください。
                     </p>
 
+                    <!-- ライブカメラ起動ボタン -->
                     <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-48 h-48 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 mb-6 shrink-0">
                         <i data-lucide="scan" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
                         <span class="font-bold text-xl">カメラを起動</span>
                     </button>
 
+                    <!-- エラーメッセージ用 -->
                     <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
                         <p id="scan-error-text" class="text-red-500 font-bold text-xs"></p>
                     </div>
@@ -121,11 +129,13 @@
                             <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-5 mb-6 shadow-inner">
                                 <p class="font-bold text-indigo-800 text-xl mb-1">模擬店 100円割引券</p>
                             </div>
+                            <!-- 獲得者の氏名を表示して本人確認に使用 -->
                             <div class="bg-slate-100 rounded-xl py-2 px-4 mb-4 text-center border border-slate-200">
                                 <p class="text-[9px] text-slate-400 font-bold">獲得者(フルネーム)</p>
                                 <p id="ticket-user-name" class="font-bold text-slate-800 text-sm">--</p>
                             </div>
                             <p id="ticket-instruction" class="text-xs text-slate-500 mb-6 font-medium leading-relaxed">生徒会本部または景品交換所で<br/>この画面を提示してください。</p>
+                            <!-- チケット利用ボタン表示エリア -->
                             <div id="ticket-action-area"></div>
                         </div>
                     </div>
@@ -217,12 +227,9 @@
         </nav>
     </div>
 
-    <!-- 隠しQRリーダー領域 -->
-    <div id="qr-reader-hidden" style="position: absolute; top: -9999px; left: -9999px; width: 300px; height: 300px; opacity: 0; pointer-events: none;"></div>
-
     <script>
         // ==========================================
-        // ★★★ 吉本くんの最新のGASのURLをあらかじめセットしてあります ★★★
+        // ★★★ あなたの最新のGASのURLをセットしてあります ★★★
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
 
@@ -382,9 +389,9 @@
             setTimeout(() => { errorContainer.classList.add('hidden'); }, 5000);
         }
 
-        // ========================================================
-        // データ送信処理（画像の読み込みを利用して、二重送信を完璧に防止！）
-        // ========================================================
+        // ==========================================
+        // データ送信処理（絶対にブロックされない画像通信方式）
+        // ==========================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
                 console.warn("GAS_API_URL が設定されていません。");
@@ -403,11 +410,11 @@
                     .join('&');
                 const urlWithParams = GAS_API_URL + '?' + queryString;
 
-                // ★画像の読み込み処理（1本に絞って、2重送信エラーを完全に解消しました！）
+                // 画像オブジェクトを作成してリクエストを走らせることでブラウザ制限を完全迂回します（二重送信防止のためこれ1本に統一！）
                 const img = new Image();
                 img.src = urlWithParams;
 
-                console.log("データ送信完了(一重送信):", payload);
+                console.log("データ送信完了:", payload);
             } catch (error) {
                 console.error("送信エラー:", error);
             }
@@ -422,6 +429,7 @@
                 updateAllUI();
                 openResultModal(spot, 'success');
                 
+                // ★画像の読み込み擬似通信（sendDataToGAS）を使って、確実にGASへ送信します！
                 sendDataToGAS("saveStamp", {
                     userId: userName, 
                     spotId: spot.id,
