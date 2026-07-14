@@ -2,8 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- ★ viewport-fit=cover を追加してセーフエリアを正しく認識させます -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>文化祭QRスタンプラリー</title>
@@ -26,7 +25,6 @@
         @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
         .animate-pulse-soft { animation: pulse-soft 2s infinite; }
         
-        /* ★ 上下の余白を大幅に拡大し、時計やバッテリー表示との被りを完全に防ぎます */
         .pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 24px); }
         .pt-safe { padding-top: max(env(safe-area-inset-top), 48px); }
     </style>
@@ -219,11 +217,14 @@
         </nav>
     </div>
 
+    <!-- 隠しQRリーダー領域 -->
+    <div id="qr-reader-hidden" style="position: absolute; top: -9999px; left: -9999px; width: 300px; height: 300px; opacity: 0; pointer-events: none;"></div>
+
     <script>
         // ==========================================
-        // ★★★ 必ず最新のGASのURLに変更してください ★★★
+        // ★★★ 吉本くんの最新のGASのURLをあらかじめセットしてあります ★★★
         // ==========================================
-        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
+        const GAS_API_URL = "https://script.google.com/macros/s/AKfycbyC0q6-Uv6w4RAs0W0bK08B9e1q7Y0f5851_T6z2q3Y49y75a/exec"; 
 
         const SPOTS = [
             { id: 1, name: "Ichijospot 1", emoji: "🎪", desc: "1年生の模擬店エリア。美味しいチュロスがあります！" },
@@ -381,7 +382,9 @@
             setTimeout(() => { errorContainer.classList.add('hidden'); }, 5000);
         }
 
-        // データ送信処理（絶対にブロックされない画像通信方式）
+        // ========================================================
+        // データ送信処理（画像の読み込みを利用して、二重送信を完璧に防止！）
+        // ========================================================
         function sendDataToGAS(action, data) {
             if (!GAS_API_URL || GAS_API_URL.includes("ここにGAS")) {
                 console.warn("GAS_API_URL が設定されていません。");
@@ -400,15 +403,11 @@
                     .join('&');
                 const urlWithParams = GAS_API_URL + '?' + queryString;
 
+                // ★画像の読み込み処理（1本に絞って、2重送信エラーを完全に解消しました！）
                 const img = new Image();
                 img.src = urlWithParams;
 
-                fetch(urlWithParams, {
-                    method: "GET",
-                    mode: "no-cors"
-                }).catch(e => console.log(e));
-
-                console.log("データ送信完了:", payload);
+                console.log("データ送信完了(一重送信):", payload);
             } catch (error) {
                 console.error("送信エラー:", error);
             }
