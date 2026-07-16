@@ -57,27 +57,19 @@
         <!-- メインコンテンツ -->
         <main class="flex-1 relative overflow-y-auto overflow-x-hidden bg-slate-50">
             
-            <!-- 1. スキャン（ホーム）画面 -->
+            <!-- 1. スキャン（くじ引き＆ホーム）画面 -->
             <section id="tab-scan" class="tab-content active p-6 min-h-full bg-gradient-to-b from-blue-50 to-white items-center justify-start pt-14 pb-32">
                 
-                <!-- 初期UI（ボタン） -->
+                <!-- 初期UI（くじ引き・ボタン表示エリア） -->
                 <div id="start-ui" class="flex flex-col items-center w-full max-w-[300px] animate-fade-in-up">
                     <!-- ユーザー名表示 -->
-                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-6 w-full text-center">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl px-4 py-2 mb-6 w-full text-center shrink-0">
                         <p class="text-[10px] text-indigo-400 font-bold">参加中のプレイヤー</p>
                         <p id="display-user-name" class="font-bold text-indigo-900 text-sm">読み込み中...</p>
                     </div>
 
-                    <h2 class="text-2xl font-bold text-indigo-900 mb-2">QRコードを読み取る</h2>
-                    <p class="text-sm text-slate-500 text-center mb-8">
-                        カメラを起動して、各クラスのスポットに<br/>あるQRコードをかざしてください。
-                    </p>
-
-                    <!-- ライブカメラ起動ボタン -->
-                    <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-48 h-48 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 mb-6 shrink-0">
-                        <i data-lucide="scan" class="w-16 h-16 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
-                        <span class="font-bold text-xl">カメラを起動</span>
-                    </button>
+                    <!-- ここが JavaScript によって「くじ引き」か「カメラ起動」に切り替わります -->
+                    <div id="lottery-section" class="w-full flex flex-col items-center shrink-0"></div>
 
                     <!-- エラーメッセージ用 -->
                     <div id="scan-error-msg" class="hidden w-full bg-red-50 border border-red-200 text-center p-3 rounded-xl mt-4">
@@ -85,7 +77,7 @@
                     </div>
 
                     <!-- テストデータリセットボタン -->
-                    <div class="mt-12 pt-6 border-t border-slate-200 w-full text-center">
+                    <div class="mt-8 pt-6 border-t border-slate-200 w-full text-center">
                         <button onclick="resetTestData()" class="text-xs text-slate-400 hover:text-slate-600 underline decoration-slate-300">テストデータをリセットして最初からやり直す</button>
                     </div>
                 </div>
@@ -109,7 +101,7 @@
                 <div class="flex flex-col items-center mb-6">
                     <h2 class="text-2xl font-bold text-indigo-900 mb-1">スタンプコレクション</h2>
                     <div class="w-16 h-1 bg-indigo-300 rounded-full mb-2"></div>
-                    <p class="text-sm text-slate-500">14箇所中、任意の7箇所を巡って特典GET！</p>
+                    <p class="text-sm text-slate-500">くじ引きで指定された7箇所を巡って特典GET！</p>
                 </div>
                 <div id="stamp-list-container" class="flex flex-col space-y-4"></div>
             </section>
@@ -147,22 +139,22 @@
                         <i data-lucide="trophy" class="w-10 h-10 text-slate-500"></i>
                     </div>
                     <h2 class="text-2xl font-bold mb-3 tracking-wide">まだ特典はありません</h2>
-                    <p class="text-slate-400 mb-10 text-sm leading-relaxed">14箇所中、お好きなスポットの<br>スタンプを7つ集めよう！</p>
+                    <p class="text-slate-400 mb-10 text-sm leading-relaxed">くじ引きで指定されたクラスの<br>スタンプを7つ集めよう！</p>
                     <button onclick="switchTab('scan')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-10 py-3.5 rounded-full font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]">
-                        QRスキャンに戻る
+                        くじ引き・スキャンに戻る
                     </button>
                 </div>
             </section>
         </main>
 
-        <!-- 獲得結果ポップアップ (絵文字なし・モダンアイコン仕様) -->
+        <!-- 獲得結果ポップアップ -->
         <div id="result-modal" class="hidden absolute inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4 opacity-0 transition-opacity duration-300">
             <div class="bg-white rounded-3xl p-6 w-full max-w-sm text-center shadow-2xl transform scale-95 transition-transform duration-300 relative" id="result-modal-content">
                 <button onclick="closeResultModal()" class="absolute top-4 right-4 bg-slate-100 text-slate-400 hover:bg-slate-200 hover:text-slate-600 rounded-full p-2 transition-colors">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
                 
-                <!-- 絵文字の代わりとなるお祝いアイコン -->
+                <!-- お祝いアイコン -->
                 <div class="mt-4 mb-4 relative flex justify-center text-indigo-600">
                     <div class="p-5 bg-indigo-50 rounded-full shadow-inner">
                         <i data-lucide="award" class="w-16 h-16"></i>
@@ -195,7 +187,7 @@
                 <div class="bg-red-50 border border-red-200 rounded-2xl p-4 mb-6 text-left">
                     <p class="text-xs text-red-600 font-extrabold flex items-start leading-relaxed">
                         <i data-lucide="alert-circle" class="w-5 h-5 mr-1.5 shrink-0 text-red-500"></i>
-                        <span>⚠️ 名字と名前 of 間に、必ず「スペース（半角または全角の空白）」を1つ空けて入力してください！</span>
+                        <span>⚠️ 名字と名前の間に、必ず「スペース（半角または全角の空白）」を1つ空けて入力してください！</span>
                     </p>
                 </div>
                 
@@ -214,7 +206,7 @@
         <nav class="bg-white border-t border-slate-200 flex justify-around px-2 pt-2 z-50 shrink-0 pb-safe shadow-[0_-4px_10px_rgba(0,0,0,0.03)] absolute bottom-0 w-full">
             <button onclick="switchTab('scan')" id="nav-scan" class="nav-btn flex flex-col items-center w-1/3 py-2 text-indigo-600 transition-colors">
                 <div class="p-1 rounded-xl mb-1 transition-colors group-hover:bg-indigo-50" id="nav-icon-bg-scan"><i data-lucide="scan" class="w-6 h-6"></i></div>
-                <span class="text-[10px] font-bold">スキャン</span>
+                <span class="text-[10px] font-bold">ミッション</span>
             </button>
             <button onclick="switchTab('stamps')" id="nav-stamps" class="nav-btn flex flex-col items-center w-1/3 py-2 text-slate-400 transition-colors relative">
                 <div class="p-1 rounded-xl mb-1 transition-colors" id="nav-icon-bg-stamps"><i data-lucide="map" class="w-6 h-6"></i></div>
@@ -242,7 +234,7 @@
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
 
         const SPOTS = [
-            // 高校1年生 (アトラクション) - ★絵文字完全排除版
+            // 高校1年生 (アトラクション)
             { id: 1, name: "1年1組", label: "謎解き迷路", type: "1年アトラクション", desc: "高校1年生：謎解き迷路が楽しめるアトラクションスポットです。" },
             { id: 2, name: "1年2組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：スリルと恐怖を体験できる本格おばけやしき！" },
             { id: 3, name: "1年3組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：暗闇に隠された驚きが待つおばけやしきスポット。" },
@@ -251,7 +243,7 @@
             { id: 6, name: "1年6組", label: "遊園地", type: "1年アトラクション", desc: "高校1年生：楽しいアトラクションが詰まったミニ遊園地エリア。" },
             { id: 7, name: "1年7組", label: "アーチ", type: "1年アトラクション", desc: "高校1年生：学校を華やかに彩る記念アーチ・ゲートスポット。" },
             
-            // 高校2年生 (物品販売・出展) - ★絵文字完全排除版
+            // 高校2年生 (物品販売・出展)
             { id: 8, name: "2年1組", label: "缶バッジ・チェキ", type: "2年物販・展示", desc: "高校2年生：思い出のチェキ撮影やオリジナル缶バッジを販売！" },
             { id: 9, name: "2年2組", label: "ラバーバンド・エコバッグ", type: "2年物販・展示", desc: "高校2年生：お揃いで付けたいラバーバンドと便利なエコバッグ。" },
             { id: 10, name: "2年3組", label: "キーホルダー・ラバーバンド", type: "2年物販・展示", desc: "高校2年生：限定オリジナルデザインのキーホルダーとラバーバンド！" },
@@ -264,9 +256,11 @@
         let stamps = [];
         let html5QrCode = null; 
         let isProcessing = false;
+        let isDrawing = false;
 
         let userName = localStorage.getItem('ichijo_festival_user_name');
         let ticketUsed = localStorage.getItem('ichijo_festival_ticket_used') === 'true';
+        let currentTargetId = localStorage.getItem('ichijo_festival_target_id') ? parseInt(localStorage.getItem('ichijo_festival_target_id')) : null;
 
         function init() {
             lucide.createIcons();
@@ -302,6 +296,7 @@
                 localStorage.removeItem('ichijo_festival_user_name');
                 localStorage.removeItem('ichijo_festival_user_id');
                 localStorage.removeItem('ichijo_festival_ticket_used');
+                localStorage.removeItem('ichijo_festival_target_id');
                 location.reload();
             }
         }
@@ -334,9 +329,102 @@
             if (savedData) {
                 try { stamps = JSON.parse(savedData); } catch (e) { stamps = []; }
             }
+            updateScanUI();
             updateAllUI();
         }
 
+        // ==========================================
+        // ★ くじ引き（目的地決定）機能
+        // ==========================================
+        function drawLottery() {
+            if (isDrawing) return;
+            isDrawing = true;
+            
+            // まだスタンプを押していないクラスだけを抽出
+            const availableSpots = SPOTS.filter(s => !stamps.includes(s.id));
+            if (availableSpots.length === 0) return;
+
+            const display = document.getElementById('lottery-display');
+            display.classList.remove('text-indigo-300', 'text-3xl');
+            display.classList.add('text-indigo-600', 'text-2xl', 'animate-pulse');
+
+            let count = 0;
+            // パラパラとクラス名が変わるルーレット演出
+            const interval = setInterval(() => {
+                const randomSpot = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+                display.textContent = randomSpot.name;
+                count++;
+                
+                if (count > 15) {
+                    clearInterval(interval);
+                    const finalSpot = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+                    display.textContent = finalSpot.name;
+                    display.classList.remove('animate-pulse');
+                    
+                    // 決定してから少しだけ間をあけて画面遷移
+                    setTimeout(() => {
+                        currentTargetId = finalSpot.id;
+                        localStorage.setItem('ichijo_festival_target_id', currentTargetId.toString());
+                        isDrawing = false;
+                        updateScanUI();
+                    }, 800);
+                }
+            }, 80);
+        }
+
+        // スキャン画面・くじ引き画面の表示切替
+        function updateScanUI() {
+            const section = document.getElementById('lottery-section');
+            if (!section) return;
+
+            if (stamps.length >= 7) {
+                section.innerHTML = `
+                    <div class="bg-yellow-50 border-4 border-yellow-200 w-full p-6 rounded-3xl flex flex-col items-center justify-center shadow-inner text-center">
+                        <i data-lucide="award" class="w-16 h-16 text-yellow-500 mb-2"></i>
+                        <span class="text-xl font-black text-yellow-700">目標の7箇所をクリア！</span>
+                        <span class="text-sm text-yellow-600 font-bold mt-2">特典画面から割引券をご利用ください</span>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            if (!currentTargetId) {
+                // ターゲット未定：くじを引く画面
+                section.innerHTML = `
+                    <h2 class="text-2xl font-bold text-indigo-900 mb-2">次の目的地を決めよう</h2>
+                    <p class="text-sm text-slate-500 text-center mb-6">くじ引きで出たクラスに行って<br/>スタンプを集めてください！</p>
+                    <div id="lottery-display" class="bg-white border-4 border-indigo-200 w-full h-24 rounded-2xl flex items-center justify-center text-3xl font-black text-indigo-300 mb-6 shadow-inner tracking-widest">
+                        ？？？
+                    </div>
+                    <button onclick="drawLottery()" class="w-full py-4 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xl shadow-lg transition-all animate-pulse-soft flex items-center justify-center border-b-4 border-rose-700 active:translate-y-1 active:border-b-0">
+                        <i data-lucide="dices" class="w-6 h-6 mr-2"></i>くじを引く！
+                    </button>
+                `;
+            } else {
+                // ターゲット決定済：目的地表示＆カメラ起動画面
+                const target = SPOTS.find(s => s.id === currentTargetId);
+                section.innerHTML = `
+                    <h2 class="text-lg font-bold text-indigo-900 mb-1">現在の目的地</h2>
+                    <div class="bg-rose-50 border-4 border-rose-200 w-full p-5 rounded-3xl flex flex-col items-center justify-center mb-6 shadow-inner text-center relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-2 bg-rose-400"></div>
+                        <span class="bg-rose-600 text-white font-black text-xs px-3 py-1 rounded-full mb-3">${target.name}</span>
+                        <span class="text-2xl font-black text-rose-900 leading-tight">${target.label}</span>
+                        <span class="text-xs text-rose-700 font-bold mt-3">${target.desc}</span>
+                    </div>
+                    <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-40 h-40 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 shrink-0">
+                        <i data-lucide="scan" class="w-12 h-12 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
+                        <span class="font-bold text-lg">カメラ起動</span>
+                    </button>
+                    <p class="text-xs text-slate-400 font-bold mt-4 text-center">※指定されたクラスのQRコードのみ<br>読み取ることができます。</p>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        // ==========================================
+        // カメラ制御・判定処理
+        // ==========================================
         function startScanner() {
             document.getElementById('start-ui').classList.add('hidden');
             document.getElementById('scanner-ui').classList.remove('hidden');
@@ -376,20 +464,33 @@
             document.getElementById('scanner-ui').classList.add('hidden');
             document.getElementById('scanner-ui').classList.remove('flex');
             document.getElementById('start-ui').classList.remove('hidden');
+            updateScanUI(); // 戻った時にUIを再描画
         }
 
         function processScanResult(decodedText) {
             if (isProcessing) return;
             const match = decodedText.match(/^ICHIJO_SPOT_(\d+)$/);
+            
             if (match) {
                 const spotId = parseInt(match[1]);
-                const spot = SPOTS.find(s => s.id === spotId);
-                if (spot) {
-                    isProcessing = true;
-                    stopScanner();
-                    handleStampSuccess(spot);
+                
+                // ★ くじで指定された目的地のQRコードかチェック
+                if (currentTargetId !== null) {
+                    if (spotId === currentTargetId) {
+                        const spot = SPOTS.find(s => s.id === spotId);
+                        if (spot) {
+                            isProcessing = true;
+                            stopScanner();
+                            handleStampSuccess(spot);
+                        } else {
+                            showScanError("登録されていないQRコードです。");
+                        }
+                    } else {
+                        showScanError("目的地のクラスではありません！<br>指定されたクラスのQRコードを読んでください。");
+                    }
                 } else {
-                    showScanError("登録されていないQRコードです。");
+                    stopScanner();
+                    showScanError("目的地が設定されていません。<br>まずはくじを引いてください。");
                 }
             } else {
                 showScanError("専用のQRコードではありません。");
@@ -438,6 +539,11 @@
             if (!alreadyGot) {
                 stamps.push(spot.id);
                 localStorage.setItem('ichijo_festival_stamps', JSON.stringify(stamps));
+                
+                // ★ スタンプ獲得成功時にターゲットをリセット
+                currentTargetId = null;
+                localStorage.removeItem('ichijo_festival_target_id');
+
                 updateAllUI();
                 openResultModal(spot, 'success');
                 
@@ -458,6 +564,9 @@
                         closeResultModal();
                         switchTab('ticket');
                     }, 2500);
+                } else {
+                    // スキャン成功後、自動的に次の「くじ引き画面」に切り替え
+                    updateScanUI();
                 }
             } else {
                 openResultModal(spot, 'already');
@@ -477,6 +586,7 @@
             
             renderStamps();
             updateTicketScreen();
+            updateScanUI();
         }
 
         function renderStamps() {
