@@ -44,13 +44,13 @@
             <div class="flex flex-col">
                 <h1 class="text-xl font-bold tracking-wider leading-tight">文化祭スタンプラリー</h1>
                 <div class="flex items-center mt-1 space-x-2">
-                    <p class="text-[10px] text-indigo-200">14箇所中 7箇所クリアで特典GET！</p>
+                    <p class="text-[10px] text-indigo-200">全7箇所（アトラクション5・展示物販2）で特典！</p>
                     <span id="current-time" class="text-[10px] font-mono bg-indigo-800 px-1.5 py-0.5 rounded border border-indigo-500 shadow-inner">00:00:00</span>
                 </div>
             </div>
             <div class="flex items-center bg-indigo-700 px-3 py-1.5 rounded-full border border-indigo-500 shadow-inner shrink-0">
                 <i data-lucide="trophy" class="w-4 h-4 text-yellow-400 mr-1"></i>
-                <span id="header-stamp-count" class="font-bold text-sm">0 / 14</span>
+                <span id="header-stamp-count" class="font-bold text-sm">0 / 7</span>
             </div>
         </header>
 
@@ -233,9 +233,8 @@
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
 
-        // ★各スポットに「ミッション（mission）」を追加しました！
         const SPOTS = [
-            // 高校1年生 (アトラクション)
+            // 高校1年生 (アトラクション) - id: 1~7
             { id: 1, name: "1年1組", label: "謎解き迷路", type: "1年アトラクション", desc: "高校1年生：謎解き迷路が楽しめるアトラクションスポットです。", mission: "迷路の中にある「隠し文字」を1つ見つけよう！" },
             { id: 2, name: "1年2組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：スリルと恐怖を体験できる本格おばけやしき！", mission: "一番怖かったおばけの特徴を覚えてこよう！" },
             { id: 3, name: "1年3組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：暗闇に隠された驚きが待つおばけやしきスポット。", mission: "悲鳴を上げずに最後まで歩き切ろう！" },
@@ -244,7 +243,7 @@
             { id: 6, name: "1年6組", label: "遊園地", type: "1年アトラクション", desc: "高校1年生：楽しいアトラクションが詰まったミニ遊園地エリア。", mission: "一番楽しそうなアトラクションの前で写真を撮ろう！" },
             { id: 7, name: "1年7組", label: "アーチ", type: "1年アトラクション", desc: "高校1年生：学校を華やかに彩る記念アーチ・ゲートスポット。", mission: "アーチを背景に最高の笑顔で記念撮影をしよう！" },
             
-            // 高校2年生 (物品販売・出展)
+            // 高校2年生 (物品販売・出展) - id: 8~14
             { id: 8, name: "2年1組", label: "缶バッジ・チェキ", type: "2年物販・展示", desc: "高校2年生：思い出のチェキ撮影やオリジナル缶バッジを販売！", mission: "お気に入りの缶バッジのデザインを見つけよう！" },
             { id: 9, name: "2年2組", label: "ラバーバンド・エコバッグ", type: "2年物販・展示", desc: "高校2年生：お揃いで付けたいラバーバンドと便利なエコバッグ。", mission: "エコバッグの柄をチェックしよう！" },
             { id: 10, name: "2年3組", label: "キーホルダー・ラバーバンド", type: "2年物販・展示", desc: "高校2年生：限定オリジナルデザインのキーホルダーとラバーバンド！", mission: "一番かっこいいキーホルダーを探そう！" },
@@ -335,15 +334,56 @@
         }
 
         // ==========================================
-        // ★ くじ引き（目的地決定）機能
+        // ★ くじ引き（アトラクション5個・展示物販2個の割合で引く）
         // ==========================================
         function drawLottery() {
             if (isDrawing) return;
             isDrawing = true;
             
-            // まだスタンプを押していないクラスだけを抽出
-            const availableSpots = SPOTS.filter(s => !stamps.includes(s.id));
-            if (availableSpots.length === 0) return;
+            // これまでに集めたスタンプをジャンル分け
+            const stampsAttraction = stamps.filter(id => id <= 7);
+            const stampsShop = stamps.filter(id => id >= 8);
+            
+            // 残り必要な数（アトラクションは5個、販売は2個）
+            const needAttraction = Math.max(0, 5 - stampsAttraction.length);
+            const needShop = Math.max(0, 2 - stampsShop.length);
+            
+            if (needAttraction === 0 && needShop === 0) {
+                isDrawing = false;
+                updateScanUI();
+                return;
+            }
+            
+            // 今回のくじでどちらのジャンルを引くか、残り枠の割合でランダムに決定
+            let targetGenre = '';
+            if (needAttraction === 0) {
+                targetGenre = 'SHOP';
+            } else if (needShop === 0) {
+                targetGenre = 'ATTRACTION';
+            } else {
+                // 両方残っている場合、残りの割合で抽選
+                const r = Math.random() * (needAttraction + needShop);
+                targetGenre = (r < needAttraction) ? 'ATTRACTION' : 'SHOP';
+            }
+            
+            // 決定したジャンルの中から、まだスタンプを押していないクラスを絞り込む
+            let candidateSpots = [];
+            if (targetGenre === 'ATTRACTION') {
+                candidateSpots = SPOTS.filter(s => s.id <= 7 && !stamps.includes(s.id));
+            } else {
+                candidateSpots = SPOTS.filter(s => s.id >= 8 && !stamps.includes(s.id));
+            }
+            
+            // 万が一候補が空になった場合の予備（通常は発生しません）
+            if (candidateSpots.length === 0) {
+                candidateSpots = SPOTS.filter(s => !stamps.includes(s.id));
+            }
+
+            // 今回の目的地の最終決定
+            const finalSpot = candidateSpots[Math.floor(Math.random() * candidateSpots.length)];
+            
+            // 演出用（パラパラ変わるやつ）には全未訪問スポットを使う
+            const allAvailableSpots = SPOTS.filter(s => !stamps.includes(s.id));
 
             const display = document.getElementById('lottery-display');
             display.classList.remove('text-indigo-300', 'text-3xl');
@@ -352,13 +392,13 @@
             let count = 0;
             // パラパラとクラス名が変わるルーレット演出
             const interval = setInterval(() => {
-                const randomSpot = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+                const randomSpot = allAvailableSpots[Math.floor(Math.random() * allAvailableSpots.length)];
                 display.textContent = randomSpot.name;
                 count++;
                 
                 if (count > 15) {
                     clearInterval(interval);
-                    const finalSpot = availableSpots[Math.floor(Math.random() * availableSpots.length)];
+                    // 最後に本命のスポットを表示して確定
                     display.textContent = finalSpot.name;
                     display.classList.remove('animate-pulse');
                     
@@ -392,9 +432,24 @@
 
             if (!currentTargetId) {
                 // ターゲット未定：くじを引く画面
+                // 現在の進行状況を画面にも表示してあげる
+                const stampsA = stamps.filter(id => id <= 7).length;
+                const stampsB = stamps.filter(id => id >= 8).length;
+                
                 section.innerHTML = `
-                    <h2 class="text-2xl font-bold text-indigo-900 mb-2">次の目的地を決めよう</h2>
-                    <p class="text-sm text-slate-500 text-center mb-6">くじ引きで出たクラスに行って<br/>スタンプを集めてください！</p>
+                    <div class="w-full flex justify-around mb-4 bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
+                        <div class="text-center">
+                            <p class="text-[10px] text-slate-400 font-bold">アトラクション</p>
+                            <p class="text-sm font-black text-indigo-600">${stampsA} / 5</p>
+                        </div>
+                        <div class="w-px bg-slate-200"></div>
+                        <div class="text-center">
+                            <p class="text-[10px] text-slate-400 font-bold">展示・物販</p>
+                            <p class="text-sm font-black text-rose-500">${stampsB} / 2</p>
+                        </div>
+                    </div>
+                    <h2 class="text-xl font-bold text-indigo-900 mb-2">次の目的地を決めよう</h2>
+                    <p class="text-xs text-slate-500 text-center mb-6">くじ引きで出たクラスに行って<br/>スタンプを集めてください！</p>
                     <div id="lottery-display" class="bg-white border-4 border-indigo-200 w-full h-24 rounded-2xl flex items-center justify-center text-3xl font-black text-indigo-300 mb-6 shadow-inner tracking-widest">
                         ？？？
                     </div>
@@ -587,7 +642,7 @@
             if (!userName) return; 
             
             const count = stamps.length;
-            document.getElementById('header-stamp-count').textContent = `${count} / 14`;
+            document.getElementById('header-stamp-count').textContent = `${count} / 7`;
             const badge = document.getElementById('nav-stamp-badge');
             if (count > 0) { badge.textContent = count; badge.classList.remove('hidden'); }
             
