@@ -233,24 +233,25 @@
         // ==========================================
         const GAS_API_URL = "https://script.google.com/macros/s/AKfycbw1jPhVdaKLAvmzqCB-fozTGuCrrFb0sw0gN92kt71bs-B9LHa59nO2Dq_nyko-5sUP/exec"; 
 
+        // ★各スポットに「ミッション（mission）」を追加しました！
         const SPOTS = [
             // 高校1年生 (アトラクション)
-            { id: 1, name: "1年1組", label: "謎解き迷路", type: "1年アトラクション", desc: "高校1年生：謎解き迷路が楽しめるアトラクションスポットです。" },
-            { id: 2, name: "1年2組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：スリルと恐怖を体験できる本格おばけやしき！" },
-            { id: 3, name: "1年3組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：暗闇に隠された驚きが待つおばけやしきスポット。" },
-            { id: 4, name: "1年4組", label: "キッキングスナイパー", type: "1年アトラクション", desc: "高校1年生：狙いを定めて蹴り倒すキッキングスナイパー！" },
-            { id: 5, name: "1年5組", label: "カジノ", type: "1年アトラクション", desc: "高校1年生：カジノゲームのスリルを安全に楽しめる特設ブース。" },
-            { id: 6, name: "1年6組", label: "遊園地", type: "1年アトラクション", desc: "高校1年生：楽しいアトラクションが詰まったミニ遊園地エリア。" },
-            { id: 7, name: "1年7組", label: "アーチ", type: "1年アトラクション", desc: "高校1年生：学校を華やかに彩る記念アーチ・ゲートスポット。" },
+            { id: 1, name: "1年1組", label: "謎解き迷路", type: "1年アトラクション", desc: "高校1年生：謎解き迷路が楽しめるアトラクションスポットです。", mission: "迷路の中にある「隠し文字」を1つ見つけよう！" },
+            { id: 2, name: "1年2組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：スリルと恐怖を体験できる本格おばけやしき！", mission: "一番怖かったおばけの特徴を覚えてこよう！" },
+            { id: 3, name: "1年3組", label: "おばけやしき", type: "1年アトラクション", desc: "高校1年生：暗闇に隠された驚きが待つおばけやしきスポット。", mission: "悲鳴を上げずに最後まで歩き切ろう！" },
+            { id: 4, name: "1年4組", label: "キッキングスナイパー", type: "1年アトラクション", desc: "高校1年生：狙いを定めて蹴り倒すキッキングスナイパー！", mission: "的を1つ以上倒してこよう！" },
+            { id: 5, name: "1年5組", label: "カジノ", type: "1年アトラクション", desc: "高校1年生：カジノゲームのスリルを安全に楽しめる特設ブース。", mission: "ディーラーに元気に挨拶をしてゲームに参加しよう！" },
+            { id: 6, name: "1年6組", label: "遊園地", type: "1年アトラクション", desc: "高校1年生：楽しいアトラクションが詰まったミニ遊園地エリア。", mission: "一番楽しそうなアトラクションの前で写真を撮ろう！" },
+            { id: 7, name: "1年7組", label: "アーチ", type: "1年アトラクション", desc: "高校1年生：学校を華やかに彩る記念アーチ・ゲートスポット。", mission: "アーチを背景に最高の笑顔で記念撮影をしよう！" },
             
             // 高校2年生 (物品販売・出展)
-            { id: 8, name: "2年1組", label: "缶バッジ・チェキ", type: "2年物販・展示", desc: "高校2年生：思い出のチェキ撮影やオリジナル缶バッジを販売！" },
-            { id: 9, name: "2年2組", label: "ラバーバンド・エコバッグ", type: "2年物販・展示", desc: "高校2年生：お揃いで付けたいラバーバンドと便利なエコバッグ。" },
-            { id: 10, name: "2年3組", label: "キーホルダー・ラバーバンド", type: "2年物販・展示", desc: "高校2年生：限定オリジナルデザインのキーホルダーとラバーバンド！" },
-            { id: 11, name: "2年4組", label: "タオル・ステッカー", type: "2年物販・展示", desc: "高校2年生：マストハブな特製タオルと、どこにでも貼れるステッカー！" },
-            { id: 12, name: "2年5組", label: "タオル・目印チャーム", type: "2年物販・展示", desc: "高校2年生：実用的なタオルとお気に入りのバッグに付けたい目印チャーム。" },
-            { id: 13, name: "2年6組", label: "ヘアバンド・前髪クリップ", type: "2年物販・展示", desc: "高校2年生：日常でも大活躍する可愛いヘアバンドと前髪クリップ！" },
-            { id: 14, name: "2年7組", label: "缶バッジ・クリアボトル", type: "2年物販・展示", desc: "高校2年生：限定クリアボトルとお気に入りの絵柄の缶バッジ！" }
+            { id: 8, name: "2年1組", label: "缶バッジ・チェキ", type: "2年物販・展示", desc: "高校2年生：思い出のチェキ撮影やオリジナル缶バッジを販売！", mission: "お気に入りの缶バッジのデザインを見つけよう！" },
+            { id: 9, name: "2年2組", label: "ラバーバンド・エコバッグ", type: "2年物販・展示", desc: "高校2年生：お揃いで付けたいラバーバンドと便利なエコバッグ。", mission: "エコバッグの柄をチェックしよう！" },
+            { id: 10, name: "2年3組", label: "キーホルダー・ラバーバンド", type: "2年物販・展示", desc: "高校2年生：限定オリジナルデザインのキーホルダーとラバーバンド！", mission: "一番かっこいいキーホルダーを探そう！" },
+            { id: 11, name: "2年4組", label: "タオル・ステッカー", type: "2年物販・展示", desc: "高校2年生：マストハブな特製タオルと、どこにでも貼れるステッカー！", mission: "ステッカーの種類を数えてみよう！" },
+            { id: 12, name: "2年5組", label: "タオル・目印チャーム", type: "2年物販・展示", desc: "高校2年生：実用的なタオルとお気に入りのバッグに付けたい目印チャーム。", mission: "目印チャームの形を一つ覚えよう！" },
+            { id: 13, name: "2年6組", label: "ヘアバンド・前髪クリップ", type: "2年物販・展示", desc: "高校2年生：日常でも大活躍する可愛いヘアバンドと前髪クリップ！", mission: "可愛いヘアバンドを試着してみよう！" },
+            { id: 14, name: "2年7組", label: "缶バッジ・クリアボトル", type: "2年物販・展示", desc: "高校2年生：限定クリアボトルとお気に入りの絵柄の缶バッジ！", mission: "クリアボトルに描かれている絵をチェックしよう！" }
         ];
 
         let stamps = [];
@@ -402,7 +403,7 @@
                     </button>
                 `;
             } else {
-                // ターゲット決定済：目的地表示＆カメラ起動画面
+                // ターゲット決定済：目的地＆ミッション表示画面
                 const target = SPOTS.find(s => s.id === currentTargetId);
                 section.innerHTML = `
                     <h2 class="text-lg font-bold text-indigo-900 mb-1">現在の目的地</h2>
@@ -410,13 +411,22 @@
                         <div class="absolute top-0 left-0 w-full h-2 bg-rose-400"></div>
                         <span class="bg-rose-600 text-white font-black text-xs px-3 py-1 rounded-full mb-3">${target.name}</span>
                         <span class="text-2xl font-black text-rose-900 leading-tight">${target.label}</span>
-                        <span class="text-xs text-rose-700 font-bold mt-3">${target.desc}</span>
+                        <span class="text-xs text-rose-700 font-bold mt-2">${target.desc}</span>
+                        
+                        <!-- ★ ミッション表示エリアを追加 -->
+                        <div class="mt-4 w-full bg-white border-2 border-rose-100 rounded-xl p-3 shadow-sm">
+                            <div class="flex items-center justify-center space-x-1 mb-1">
+                                <i data-lucide="flame" class="w-4 h-4 text-rose-500"></i>
+                                <p class="text-[10px] font-black text-rose-500 tracking-wider">クラスミッション</p>
+                            </div>
+                            <p class="text-sm font-bold text-slate-700">${target.mission}</p>
+                        </div>
                     </div>
                     <button onclick="startScanner()" class="group relative bg-indigo-600 text-white w-40 h-40 rounded-full flex flex-col items-center justify-center shadow-[0_10px_25px_rgba(79,70,229,0.4)] hover:-translate-y-1 transition-all duration-300 border-4 border-indigo-300 shrink-0">
                         <i data-lucide="scan" class="w-12 h-12 mb-2 group-hover:scale-110 transition-transform duration-300"></i>
                         <span class="font-bold text-lg">カメラ起動</span>
                     </button>
-                    <p class="text-xs text-slate-400 font-bold mt-4 text-center">※指定されたクラスのQRコードのみ<br>読み取ることができます。</p>
+                    <p class="text-xs text-slate-400 font-bold mt-4 text-center">※ミッションをクリアしたら<br>クラスのQRコードを読み取ろう！</p>
                 `;
             }
             lucide.createIcons();
@@ -474,7 +484,7 @@
             if (match) {
                 const spotId = parseInt(match[1]);
                 
-                // ★ くじで指定された目的地のQRコードかチェック
+                // くじで指定された目的地のQRコードかチェック
                 if (currentTargetId !== null) {
                     if (spotId === currentTargetId) {
                         const spot = SPOTS.find(s => s.id === spotId);
@@ -540,7 +550,7 @@
                 stamps.push(spot.id);
                 localStorage.setItem('ichijo_festival_stamps', JSON.stringify(stamps));
                 
-                // ★ スタンプ獲得成功時にターゲットをリセット
+                // スタンプ獲得成功時にターゲットをリセット
                 currentTargetId = null;
                 localStorage.removeItem('ichijo_festival_target_id');
 
